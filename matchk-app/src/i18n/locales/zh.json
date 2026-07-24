@@ -1,0 +1,59 @@
+{
+  "home": {
+    "searchPlaceholder": "您想去哪里？",
+    "scheduler": "行程助手",
+    "achievementMap": "成就地图",
+    "nextTrips": "抢先看下一个推荐目的地"
+  },
+  "intro": {
+    "category": "隐藏景点",
+    "tagline": "游客喜爱，本地人却不知道的地方",
+    "cta": "查看详情"
+  },
+  "detail": {
+    "stampHere": "我到了！",
+    "stamped": "已获得印章",
+    "tooFar": "距离地标太远（{{distance}}米）",
+    "stampSuccess": "获得印章！",
+    "autoTranslated": "🔍 自动翻译 — 您的语言尚无官方信息的隐藏景点"
+  },
+  "map": {
+    "title": "成就地图",
+    "progress": "我的收藏 {{stamped}} / 釜山全部 {{total}}"
+  },
+  "scheduler": {
+    "title": "行程助手",
+    "inputPlaceholder": "搜索出发地点",
+    "relatedTitle": "适合一起游览的地方"
+  },
+  "search": {
+    "noResults": "没有搜索结果",
+    "nearbyInstead": "附近推荐"
+  },
+  "hidden": {
+    "encounterTitle": "发现隐藏景点！",
+    "encounterSub": "您的语言尚不知晓的釜山隐藏景点就在附近",
+    "collect": "获得隐藏印章",
+    "later": "稍后",
+    "discovered": "已发现{{count}}处隐藏景点"
+  },
+  "profile": {
+    "title": "个人资料",
+    "language": "更改语言",
+    "logout": "退出登录",
+    "guest": "以访客身份继续",
+    "loginGoogle": "使用 Google 登录",
+    "deleteTitle": "注销账户",
+    "deleteWarning": "您的账户和所有印章记录将被永久删除，且无法恢复。确定要注销吗？",
+    "deleteConfirm": "注销",
+    "deleteDone": "账户已注销",
+    "cancel": "取消",
+    "privacy": "隐私政策"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "加载失败 — 请检查网络/服务器",
+    "retry": "重试",
+    "close": "关闭"
+  }
+}

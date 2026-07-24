@@ -1,0 +1,32 @@
+# Mātch K monorepo — 최상위 안전망 (하위 폴더별 .gitignore와 함께 작동)
+
+# 시크릿 — 절대 커밋 금지
+**/.env
+**/.env.local
+
+# 파이썬
+**/__pycache__/
+*.pyc
+**/.venv/
+**/venv/
+**/.pytest_cache/
+**/*.db
+
+# 노드 / Expo
+**/node_modules/
+**/.expo/
+**/dist/
+*.log
+
+# 네이티브 빌드 산출물 (Expo prebuild)
+matchk-app/ios/
+matchk-app/android/
+
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# 로컬 에이전트 설정
+.claude/

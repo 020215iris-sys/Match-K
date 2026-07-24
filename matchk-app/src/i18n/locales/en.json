@@ -1,0 +1,59 @@
+{
+  "home": {
+    "searchPlaceholder": "Where are you going?",
+    "scheduler": "Scheduler",
+    "achievementMap": "Achievement Map",
+    "nextTrips": "Your next destinations, previewed"
+  },
+  "intro": {
+    "category": "Hidden Gems",
+    "tagline": "Loved by travelers, unknown to locals",
+    "cta": "See more"
+  },
+  "detail": {
+    "stampHere": "I'm here!",
+    "stamped": "Stamp collected",
+    "tooFar": "Too far from the landmark ({{distance}}m)",
+    "stampSuccess": "Stamp collected!",
+    "autoTranslated": "🔍 Auto-translated — a hidden spot with no official info in your language yet"
+  },
+  "map": {
+    "title": "Achievement Map",
+    "progress": "My collection {{stamped}} / Busan total {{total}}"
+  },
+  "scheduler": {
+    "title": "Scheduler",
+    "inputPlaceholder": "Search a starting place",
+    "relatedTitle": "Great places nearby"
+  },
+  "search": {
+    "noResults": "No results found",
+    "nearbyInstead": "Recommended nearby"
+  },
+  "hidden": {
+    "encounterTitle": "Hidden spot found!",
+    "encounterSub": "A Busan hidden gem, unknown in your language, is nearby",
+    "collect": "Collect hidden stamp",
+    "later": "Later",
+    "discovered": "{{count}} hidden found"
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Change language",
+    "logout": "Log out",
+    "guest": "Continue as guest",
+    "loginGoogle": "Sign in with Google",
+    "deleteTitle": "Delete account",
+    "deleteWarning": "Your account and all stamp records will be permanently deleted. This cannot be undone. Delete anyway?",
+    "deleteConfirm": "Delete",
+    "deleteDone": "Your account has been deleted",
+    "cancel": "Cancel",
+    "privacy": "Privacy Policy"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Couldn't load — check network/server",
+    "retry": "Retry",
+    "close": "Close"
+  }
+}

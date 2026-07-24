@@ -1,0 +1,13 @@
+# Windows 팀 — 코드 파일은 LF로 통일 (CRLF 섞임 방지)
+* text=auto
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.ttf binary
+*.otf binary

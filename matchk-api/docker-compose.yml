@@ -1,0 +1,40 @@
+# 팀 공통 개발 환경 (D1 [B] 확장) — API + PostgreSQL
+# 사용법:
+#   copy .env.example .env   (TOURAPI_KEY 채우기)
+#   docker compose up --build
+#   docker compose exec api python -m app.scripts.seed_landmarks   # 시드
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: matchk
+      POSTGRES_PASSWORD: matchk
+      POSTGRES_DB: matchk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matchk"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: .
+    env_file: .env # TOURAPI_KEY, JWT_SECRET, GOOGLE_* (실 키는 커밋 금지 — 부록 C)
+    environment:
+      # compose 안에서는 sqlite 대신 Postgres 사용 (env_file 값을 덮어씀)
+      DATABASE_URL: postgresql://matchk:matchk@db:5432/matchk
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    # 개발 편의: 코드 수정 즉시 반영 (볼륨 마운트 + reload)
+    volumes:
+      - .:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  pgdata:

@@ -1,0 +1,47 @@
+# Mātch K CI (monorepo) — 리포 하나에 백엔드·프론트 함께.
+# GitHub Actions는 리포 최상위 .github/workflows만 읽으므로 여기서 두 잡을 실행.
+# 경로 필터로 바뀐 쪽만 돌게 함 (working-directory로 각 폴더 지정).
+# 깃대장(정현): Settings → Branches → main 보호 규칙에 status check "test" / "typecheck" 지정.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: test        # 백엔드 pytest (브랜치 보호 status check 이름)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: matchk-api
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+          cache-dependency-path: matchk-api/requirements.txt
+      - name: 의존성 설치
+        run: pip install -r requirements.txt
+      - name: 테스트 (환경변수는 tests/conftest.py가 주입 — 실키 불필요)
+        run: pytest -v
+
+  typecheck:
+    name: typecheck   # 프론트 타입체크
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: matchk-app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: matchk-app/package-lock.json
+      - name: 의존성 설치
+        run: npm ci
+      - name: TypeScript 타입체크
+        run: npm run typecheck

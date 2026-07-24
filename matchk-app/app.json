@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "Mātch K",
+    "slug": "matchk",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "matchk",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#185FA5"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.matchk.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Your location is used to verify landmark visits and stamp your achievement map."
+      }
+    },
+    "android": {
+      "package": "com.matchk.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-location",
+      "expo-secure-store",
+      "expo-localization",
+      "expo-web-browser"
+    ]
+  }
+}

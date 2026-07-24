@@ -1,0 +1,302 @@
+[
+  {
+    "signguCode": "11110",
+    "signguNm": "종로구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "129237.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11110",
+    "signguNm": "종로구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "550196.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11110",
+    "signguNm": "종로구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "47689.479999999996",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11140",
+    "signguNm": "중구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "94857.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11140",
+    "signguNm": "중구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "515249.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11140",
+    "signguNm": "중구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "89172.99999999996",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11170",
+    "signguNm": "용산구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "149149.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11170",
+    "signguNm": "용산구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "452994.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11170",
+    "signguNm": "용산구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "37722.46",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11200",
+    "signguNm": "성동구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "168350.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11200",
+    "signguNm": "성동구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "275926.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11200",
+    "signguNm": "성동구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "20298.490000000013",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11215",
+    "signguNm": "광진구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "225834.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11215",
+    "signguNm": "광진구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "265986.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11215",
+    "signguNm": "광진구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "6318.560000000002",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11230",
+    "signguNm": "동대문구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "190862.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11230",
+    "signguNm": "동대문구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "177341.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11230",
+    "signguNm": "동대문구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "5619.920000000001",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11260",
+    "signguNm": "중랑구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "185521.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11260",
+    "signguNm": "중랑구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "121292.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11260",
+    "signguNm": "중랑구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "1421.3500000000001",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11290",
+    "signguNm": "성북구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "264383.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11290",
+    "signguNm": "성북구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "184264.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11290",
+    "signguNm": "성북구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "3459.5300000000016",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11305",
+    "signguNm": "강북구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "137903.5",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11305",
+    "signguNm": "강북구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "115920.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11305",
+    "signguNm": "강북구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "1422.8999999999994",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11320",
+    "signguNm": "도봉구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "1",
+    "touDivNm": "현지인(a)",
+    "touNum": "144977.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11320",
+    "signguNm": "도봉구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "2",
+    "touDivNm": "외지인(b)",
+    "touNum": "112756.0",
+    "baseYmd": "20260613"
+  },
+  {
+    "signguCode": "11320",
+    "signguNm": "도봉구",
+    "daywkDivCd": "6",
+    "daywkDivNm": "토요일",
+    "touDivCd": "3",
+    "touDivNm": "외국인(c)",
+    "touNum": "746.1099999999999",
+    "baseYmd": "20260613"
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "home": {
+    "searchPlaceholder": "どこへ行きますか？",
+    "scheduler": "スケジューラー",
+    "achievementMap": "実績マップ",
+    "nextTrips": "次のおすすめスポットを先取り"
+  },
+  "intro": {
+    "category": "隠れた名所",
+    "tagline": "旅行者に人気、地元の人は知らない場所",
+    "cta": "詳しく見る"
+  },
+  "detail": {
+    "stampHere": "ここにいます！",
+    "stamped": "スタンプ獲得済み",
+    "tooFar": "ランドマークから遠すぎます（{{distance}}m）",
+    "stampSuccess": "スタンプを獲得しました！",
+    "autoTranslated": "🔍 自動翻訳 — この言語の公式情報がまだない隠れた場所"
+  },
+  "map": {
+    "title": "実績マップ",
+    "progress": "マイコレクション {{stamped}} / 釜山全体 {{total}}"
+  },
+  "scheduler": {
+    "title": "スケジューラー",
+    "inputPlaceholder": "基準となる場所を検索",
+    "relatedTitle": "一緒に行きたい場所"
+  },
+  "search": {
+    "noResults": "検索結果がありません",
+    "nearbyInstead": "近くのおすすめスポット"
+  },
+  "hidden": {
+    "encounterTitle": "隠れスポット発見！",
+    "encounterSub": "あなたの言語では知られていない釜山の隠れた名所が近くにあります",
+    "collect": "隠れスタンプを獲得",
+    "later": "後で",
+    "discovered": "隠れスポット{{count}}カ所発見"
+  },
+  "profile": {
+    "title": "プロフィール",
+    "language": "言語を変更",
+    "logout": "ログアウト",
+    "guest": "ゲストとして続ける",
+    "loginGoogle": "Googleでログイン",
+    "deleteTitle": "退会",
+    "deleteWarning": "アカウントとすべてのスタンプ記録が完全に削除されます。元に戻せません。本当に退会しますか？",
+    "deleteConfirm": "退会する",
+    "deleteDone": "退会が完了しました",
+    "cancel": "キャンセル",
+    "privacy": "プライバシーポリシー"
+  },
+  "common": {
+    "loading": "読み込み中...",
+    "error": "読み込めませんでした — ネットワーク/サーバーをご確認ください",
+    "retry": "再試行",
+    "close": "閉じる"
+  }
+}

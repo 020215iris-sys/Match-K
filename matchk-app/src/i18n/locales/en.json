@@ -37,6 +37,16 @@
     "later": "Later",
     "discovered": "{{count}} hidden found"
   },
+  "mascot": {
+    "greeting": "Hi! I found today's hidden spot",
+    "reasonThin": "This place isn't in your country's guidebooks yet!",
+    "reasonHidden": "A back-alley only locals know — quiet and relaxed",
+    "reasonUndiscovered": "A real hidden gem almost no one knows yet ✨",
+    "reasonForeigners": "Quietly famous among travelers only!",
+    "reasonDefault": "How about here today? I picked it for you!",
+    "cta": "See the way there",
+    "challenge": "View challenge"
+  },
   "profile": {
     "title": "Profile",
     "language": "Change language",

@@ -15,6 +15,7 @@ import { endpoints, Recommendation, TourItem } from '@/api/endpoints';
 import CircleButton from '@/components/CircleButton';
 import ErrorNotice from '@/components/ErrorNotice';
 import HiddenEncounterPopup from '@/components/HiddenEncounterPopup';
+import Mascot from '@/components/Mascot';
 import { useHiddenEncounter } from '@/hooks/useHiddenEncounter';
 import { haversineM, STAMP_RADIUS_M } from '@/utils/geo';
 import IntroPopup from '@/components/IntroPopup';
@@ -183,6 +184,9 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* 역추천의 얼굴 — 검색 중이 아닐 때만 떠 있음 (GPS 근처 추천) */}
+      {!searching && <Mascot recType="nearby" lat={location?.lat} lng={location?.lng} />}
     </SafeAreaView>
   );
 }

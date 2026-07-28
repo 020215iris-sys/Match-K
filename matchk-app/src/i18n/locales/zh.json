@@ -37,6 +37,16 @@
     "later": "稍后",
     "discovered": "已发现{{count}}处隐藏景点"
   },
+  "mascot": {
+    "greeting": "你好！我找到了今天的隐藏景点",
+    "reasonThin": "这里，你们国家的旅游指南里还没有哦！",
+    "reasonHidden": "只有当地人才知道的小巷，人少又悠闲",
+    "reasonUndiscovered": "几乎没人知道的真正隐藏宝藏 ✨",
+    "reasonForeigners": "只在旅行者之间悄悄出名的地方！",
+    "reasonDefault": "今天来这里怎么样？我帮你选的！",
+    "cta": "查看路线",
+    "challenge": "查看挑战"
+  },
   "profile": {
     "title": "个人资料",
     "language": "更改语言",

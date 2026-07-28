@@ -37,6 +37,16 @@
     "later": "後で",
     "discovered": "隠れスポット{{count}}カ所発見"
   },
+  "mascot": {
+    "greeting": "こんにちは！今日の隠れスポットを見つけたよ",
+    "reasonThin": "ここ、あなたの国のガイドブックにはまだ載ってない場所だよ！",
+    "reasonHidden": "地元の人だけが知る路地。人も少なくてゆったり楽しめるよ",
+    "reasonUndiscovered": "まだ誰も知らない本物の隠れた名所だよ ✨",
+    "reasonForeigners": "旅行者の間だけで静かに人気の場所だよ！",
+    "reasonDefault": "今日はここはどう？私が選んでみたよ！",
+    "cta": "行き方を見る",
+    "challenge": "チャレンジを見る"
+  },
   "profile": {
     "title": "プロフィール",
     "language": "言語を変更",

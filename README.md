@@ -1,59 +1,94 @@
-# Mātch K — 모노 워크스페이스
+# Mātch K
 
-> 한국관광공사 2026 관광데이터 활용 공모전 출품작
-> 부산 인바운드 외국인 대상: 업적(도장) 시스템 + 언어권별 역추천
+> 한국관광공사 2026 관광데이터 활용 공모전 · 웹·앱 개발 부문 출품작
+> 부산 인바운드 외국인을 위한 **관광 추천 + 도장(업적) 앱**
 
-| 폴더 | 내용 | 담당 |
-|---|---|---|
-| `matchk-api/` | FastAPI 백엔드 (각 폴더 README 참조) | B, C |
-| `matchk-app/` | Expo RN 앱 | A |
+---
 
-> GitHub에는 지시서대로 리포 2개(`matchk-app`, `matchk-api`)로 분리 push 권장 —
-> 이 폴더는 로컬 작업용 워크스페이스.
+## 우리가 만드는 것
 
-## 빠른 시작 (백엔드 → 앱 순서)
+부산을 여행하는 외국인에게, **"당신 언어권엔 아직 안 알려진 부산의 로컬 스팟"**을 추천하고,
+그곳을 직접 방문해 도장을 모으는 게임형 여행 앱.
+
+두 가지 핵심:
+
+- **언어권별 역추천** — 국문 관광정보는 많지만 외국어(영·일·중)는 적다는 실제 데이터 격차를 신호로, "내 언어권엔 소개 안 된 숨은 곳"을 골라 추천.
+- **소멸위험 지역 재발견** — 행정안전부 지정 인구감소지역(부산 동구·서구·영도구)을 도장·히든 미션으로 방문 유도. (사용자에겐 "로컬만 아는 곳"으로 표현 — 부정적 표현은 쓰지 않음)
+
+두 축을 잇는 얼굴이 **마스코트** — 홈·업적지도·스케줄러를 돌아다니며 추천 장소와 도전과제를 안내.
+
+## 주요 기능
+
+| 기능 | 설명 |
+|---|---|
+| 홈 추천 + 마스코트 | 역추천 결과를 카드 + 마스코트 말풍선으로 |
+| 업적지도 | 부산 관광지를 도장판으로, 방문 비율만큼 지도 색칠 |
+| 히든 미션 | 도장 일정 비율 달성 시, 소멸위험 구의 숨은 장소가 위치기반으로 등장 (포켓몬 고식) |
+| 스케줄러 | GPS 근처 장소를 지도 핀 + 정보로 안내 |
+| 검색·상세 | TourAPI 실시간 검색, 외국어판 없으면 자동 번역 |
+| 다국어 | ko / en / ja / zh 자동 감지 + 수동 전환 |
+
+## 기술 스택
+
+- **백엔드** `matchk-api` — FastAPI (Python 3.10), SQLAlchemy, SQLite(개발)→PostgreSQL(배포)
+- **프론트** `matchk-app` — Expo (React Native), i18next, zustand
+- **인프라** — Railway(배포), GitHub Actions(CI), Papago(번역), TourAPI(관광 데이터)
+
+## 저장소 구조 (monorepo)
+
+```
+Match_K/
+├─ matchk-api/     # 백엔드
+├─ matchk-app/     # 앱
+├─ .github/        # CI (test / typecheck 자동 실행)
+├─ README.md       # 이 문서
+├─ HANDOFF.md      # 프로젝트 개요·현황·개발 방향 (온보딩)
+├─ TEAM_SETUP.md   # 환경 세팅·협업 규칙
+└─ PRIVACY_POLICY.md
+```
+
+## 빠른 시작
 
 ```bash
 # 1) 백엔드
 cd matchk-api
-python -m venv .venv && .venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\Activate.ps1          # PowerShell (mac/linux는 source .venv/bin/activate)
 pip install -r requirements.txt
-copy .env.example .env          # TOURAPI_KEY 입력
-uvicorn app.main:app --reload   # http://localhost:8000/docs
+copy .env.example .env               # TOURAPI_KEY 입력
+python -m app.scripts.seed_landmarks # 랜드마크 시드 (TourAPI 키 필요)
+python -m app.scripts.mark_hidden    # 히든 장소 지정
+uvicorn app.main:app --reload --host 0.0.0.0
 
-# 2) 시드 (D2) — TourAPI 키 필요
-python -m app.scripts.seed_landmarks
-
-# 3) 앱
-cd ../matchk-app
-npm install && npx expo install --fix
-copy .env.example .env
-npx expo start
+# 2) 앱 (새 터미널)
+cd matchk-app
+npm install
+copy .env.example .env               # EXPO_PUBLIC_API_URL을 내 PC LAN IP로
+npx expo start                       # 폰 Expo Go로 QR 스캔
 ```
 
-## 이 스캐폴딩이 커버한 지시서 티켓
+> 처음이면 **TEAM_SETUP.md**를 먼저 읽으세요 — Node 버전, 방화벽, IP 설정 등 자주 걸리는 함정 정리돼 있습니다.
 
-- **D1**: 백/프론트 스캐폴딩, .env.example, 폴더 구조 ✅ (Railway/GitHub/Notion 계정 작업은 팀 수행)
-- **D2**: DB 스키마(참조 정책+unique 제약), districts 16개 시드, 인증 흐름(Google+게스트), i18n 4개 언어, 참조 로더 ✅
-- **D3**: 랜드마크 프록시 3종, TourAPI 클라이언트(TTL 차등), 홈 UI ✅
-- **D4**: 도장 API(haversine+시연 모드), 업적지도 WebView 뼈대, 역추천 v1 ✅
-- **D5**: 역추천 엔드포인트(lang 파라미터+소멸위험 구 필터), 인트로 팝업, 연관 관광지 ✅
-- **D6**: 검색 API+화면(디바운싱), 색칠 로직, v2 언어 매핑+커버리지 스코어 ✅
-- **D7~D8**: 스케줄러/상세/프로필 화면, 프로필 API, 캐시 히트율 측정 ✅ (뼈대 수준)
+## 역할 분담
 
-## 사람이 해야 하는 것 (코드로 대체 불가)
+| 담당 | 영역 |
+|---|---|
+| 새봄 | 역추천 엔진 (`recommender.py`, `lang_mapping.py`) |
+| 현표 | 업적·도장·마스코트 (`stamps.py`, `hidden.py`, 업적지도) |
+| 지현 | 상세·검색·번역 (`landmarks.py`, `search.py`, `translator.py`) |
+| 다은 | 스케줄러 + 깃대장 (`SchedulerScreen`, 지도) |
+| 정현 | 인증·언어 + 배포·대표 (`auth.py`, `ProfileScreen`) |
 
-1. **TourAPI 키 발급 + 운영계정 신청** (D1 [C]) → `matchk-api/.env`
-2. **다국어 API 5종 + 데이터랩 API 승인 신청** — 승인 후 `tourapi_client.py` 상수 3개 검증
-3. **Kakao JS 키 + 웹 도메인 등록** → `matchk-app/.env`
-4. **Google Cloud OAuth 클라이언트** (D2 [B]) → `matchk-api/.env`
-5. **부산 구·군 GeoJSON 16개** (D3 [D]) → `matchk-app/assets/busanDistricts.geojson.json`
-6. Railway 배포, GitHub 리포 2개 생성, Figma 시안 (D1)
+## 협업 규칙 (요약)
 
-## 시연 모드 (부산 외 지역 발표 대비)
+- main 직접 push 금지 → feature 브랜치 → PR → CI 초록불 + 리뷰 1명 → 머지
+- 자기 영역 파일만 수정, 공용 파일(models·endpoints·config)은 단독 PR로 먼저
+- 커밋: `feat:` `fix:` `docs:` `refactor:` + 한글 한 줄
+- 매일 아침 `git pull origin main`
 
-- 백엔드 `.env`: `DEMO_MODE=true`
-- 앱 `.env`: `EXPO_PUBLIC_DEMO_STAMP=true`
-- → GPS 반경 검증 없이 도장 시연 가능. 심사 질문 시 투명하게 설명 (계획서 리스크 표)
+자세한 내용은 **TEAM_SETUP.md** 참고.
 
-> 팀원 온보딩: **TEAM_SETUP.md** 참조 (Docker/Git/환경변수). GitHub 리포 생성 후 `setup_git.bat <조직명>` 실행.
+## 일정
+
+- 개발 목표: **8월 말** / 서류 제출 마감: **9/21** / 최종 발표: **10/28**
+- 앱 스토어(원스토어) 출시 필수 — 심사 기간 고려해 역산

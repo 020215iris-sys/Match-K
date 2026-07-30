@@ -14,35 +14,40 @@
 
 > Docker는 **불필요** — 이 프로젝트는 로컬 SQLite로 그냥 돌아감. (Docker/PostgreSQL은 배포 때만)
 
-## 2. Git 세팅 (리포 2개 정책 — 지시서 D1 [E])
+## 2. Git 세팅 (monorepo — 리포 1개)
 
 1. 각자 1회: `git config --global user.name "이름"` / `git config --global user.email "이메일"`
-2. E가 GitHub 조직에 빈 리포 2개 생성: `matchk-api`, `matchk-app`
-3. **이 폴더에서** `setup_git.bat <조직명>` 실행 → init + 초기 커밋 + push까지 자동
-4. 이후 팀원은 각 리포를 clone해서 작업
+2. 리포 클론: `git clone https://github.com/020215iris-sys/Match-K.git`
+3. `matchk-api`(백엔드) + `matchk-app`(앱)이 한 리포 안에 있음
 
-**규칙 (부록 B 그대로)**
+**규칙**
 
-- main 직접 push 금지 → feature 브랜치 → PR → 리뷰 1명 → 머지
-- 커밋 컨벤션: `feat:` `fix:` `chore:` `docs:` `refactor:`
+- main 직접 push 금지 → feature 브랜치 → PR → CI 초록불 + 리뷰 1명 → 머지
+- 커밋 컨벤션: `feat:` `fix:` `chore:` `docs:` `refactor:` + 한글 한 줄
 - PR 제목: `[담당자] 화면/기능 요약`
 - 라인엔딩은 `.gitattributes`가 LF로 강제 (Windows CRLF 섞임 방지) — 건드리지 말 것
 
-## 3. 백엔드 — Docker로 실행 (권장, 전원 동일 환경)
+## 3. 백엔드 실행 (venv + uvicorn — Docker 불필요)
 
-```bash
+> 이 프로젝트는 개발 시 로컬 SQLite를 써서 **Docker/PostgreSQL 설치가 필요 없음.**
+> (Docker·PostgreSQL은 나중에 Railway 배포할 때만 사용)
+
+```powershell
 cd matchk-api
-copy .env.example .env    # TOURAPI_KEY 등 채우기 (실 키 커밋 절대 금지 — 부록 C)
-docker compose up --build # API :8000 + PostgreSQL :5432
+python -m venv .venv
+.venv\Scripts\Activate.ps1        # mac/linux: source .venv/bin/activate
+pip install -r requirements.txt
+copy .env.example .env             # TOURAPI_KEY 입력 (실 키 커밋 절대 금지)
+python -m app.scripts.seed_landmarks   # 랜드마크 시드 (TourAPI 키 필요)
+python -m app.scripts.mark_hidden      # 히든 장소 지정
+uvicorn app.main:app --reload --host 0.0.0.0   # http://localhost:8000/docs
 ```
 
-- 확인: http://localhost:8000/health → `{"status":"ok"}` / 문서: http://localhost:8000/docs
-- 랜드마크 시드 (D2 [C], TourAPI 키 필요):
-  `docker compose exec api python -m app.scripts.seed_landmarks`
-- 코드 수정은 즉시 반영됨 (볼륨 마운트 + --reload)
-- Docker 없이: `matchk-api/README.md`의 venv 방식 (이때 DB는 기본 sqlite)
+- 확인: http://localhost:8000/docs (API 문서) / http://localhost:8000/health
+- 코드 수정은 `--reload`로 즉시 반영됨
+- `--host 0.0.0.0` = 폰에서 붙을 수 있게 (기본값 127.0.0.1은 폰이 못 붙음)
 
-## 4. 프론트 — Expo (Docker 대상 아님)
+## 4. 프론트 — Expo
 
 Expo는 실기기/시뮬레이터와 직접 통신해야 해서 Docker에 넣지 않는다 (호스트에서 실행).
 
@@ -83,8 +88,8 @@ python -m app.scripts.mark_hidden          # 히든 장소 지정 (소멸위험 
 ## 5. 테스트 / 타입체크
 
 ```bash
-# 백엔드 (21개 테스트)
-cd matchk-api && pytest            # Docker면: docker compose exec api pytest
+# 백엔드 (테스트 — venv 활성화 후)
+cd matchk-api && pytest
 
 # 프론트 (npm install 후)
 cd matchk-app && npm run typecheck
@@ -158,7 +163,7 @@ PR 제목: `[담당자] 기능 요약` (예: `[다은] 스케줄러 핀 지도`)
 
 ## 8. 자주 걸리는 것
 
-- **포트 충돌 (8000/5432)**: 기존 프로세스 종료 후 `docker compose up`
-- **compose에서 DB 초기화하고 싶을 때**: `docker compose down -v` (볼륨 삭제)
-- **TourAPI 429/한도 초과**: 개발계정 일 1,000건 — 캐시가 지켜주지만, 언어별 비교(D6 [C])는 하루 첫 실행만 실호출
-- **Railway 배포 (D1 [B])**: 리포 연결하면 Dockerfile 자동 인식. 환경변수는 Railway 대시보드에 등록, Start Command에 `--port $PORT`
+- **포트 충돌 (8000)**: 기존 uvicorn 프로세스 종료 후 다시 실행
+- **폰에서 홈이 비어 있음**: 십중팔구 `.env`의 IP가 현재 PC IP와 다름 → ipconfig로 확인 후 수정, `expo start -c`
+- **TourAPI 429/한도 초과**: 개발계정 일 1,000건 — 캐시가 막아주지만 언어별 비교는 하루 첫 실행만 실호출. 각자 키 발급으로 한도 분산
+- **Railway 배포 (정현)**: 리포 연결하면 Dockerfile 자동 인식. 환경변수는 Railway 대시보드에 등록, Start Command에 `--port $PORT`

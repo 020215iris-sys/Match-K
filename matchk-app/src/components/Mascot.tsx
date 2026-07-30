@@ -6,7 +6,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { endpoints, Recommendation } from '@/api/endpoints';
@@ -67,9 +67,15 @@ export default function Mascot({ recType = 'auto', lat, lng }: Props) {
           <View style={styles.tail} />
         </View>
       )}
-      <Pressable style={styles.mascot} onPress={() => setOpen((v) => !v)} hitSlop={8}>
-        {/* 임시 캐릭터 — 디자인 확정 시 이미지로 교체 */}
-        <Text style={styles.face}>🐙</Text>
+      <Pressable style={styles.mascot} onPress={() => setOpen((v) => !v)} hitSlop={8}
+        accessibilityLabel="Match K 마스코트">
+        {/* 말풍선 열리면 기쁨, 닫혀 있으면 정면 (표정: happy/surprised/sad/angry 교체 가능) */}
+        <Image
+          source={open ? require('../../assets/mascot/mascot-happy.png')
+            : require('../../assets/mascot/mascot-front.png')}
+          style={styles.mascotImg}
+          resizeMode="contain"
+        />
       </Pressable>
     </View>
   );
@@ -78,12 +84,9 @@ export default function Mascot({ recType = 'auto', lat, lng }: Props) {
 const styles = StyleSheet.create({
   wrap: { position: 'absolute', right: 16, bottom: 24, alignItems: 'flex-end', zIndex: 50 },
   mascot: {
-    width: 64, height: 64, borderRadius: 32, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 6, shadowOffset: { width: 0, height: 3 },
-    elevation: 6,
+    width: 76, height: 76, alignItems: 'center', justifyContent: 'center',
   },
-  face: { fontSize: 34 },
+  mascotImg: { width: 76, height: 76 },
   bubble: {
     maxWidth: 260, marginBottom: 12, padding: 14, borderRadius: 16,
     backgroundColor: colors.background, borderWidth: 1, borderColor: colors.border,

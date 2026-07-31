@@ -70,3 +70,34 @@ def progress(district: int | None = None, db: Session = Depends(get_db), user: U
     total_all = sum(i["total"] for i in items)
     stamped_all = sum(i["stamped"] for i in items)
     return {"districts": items, "totalLandmarks": total_all, "totalStamped": stamped_all}
+
+
+@router.get("/district/{sigungu_code}")
+def district_status(sigungu_code: int, db: Session = Depends(get_db),
+                    user: User = Depends(get_current_user)):
+    """업적지도 3페이지용 — 그 구의 도장 상태 + 히든 발동(구별 비율) 여부.
+
+    - stampedContentIds: 앱이 구 관광지 리스트(실시간)와 대조해 찍힘/빈칸 표시
+    - hiddenReady: 구 도장 비율 >= 임계값 → 히든 팝업 발동 가능
+      (⚠️ 구별 기준 — config HIDDEN_STAMP_THRESHOLD 임시값. 팀 회의로 구 단위 재정의 예정)
+    TODO(현표): 히든 후보 장소 선정·팝업 대상 contentid 지정 로직.
+    """
+    district = db.query(District).filter(District.sigungu_code == sigungu_code).first()
+    if district is None:
+        raise HTTPException(404, "district_not_found")
+    total = (db.query(func.count(Landmark.id))
+             .filter(Landmark.district_id == district.id, Landmark.is_active,
+                     Landmark.is_hidden.is_(False)).scalar() or 0)
+    rows = (db.query(Landmark.contentid, Stamp.is_hidden)
+            .join(Stamp, (Stamp.landmark_id == Landmark.id) & (Stamp.user_id == user.id))
+            .filter(Landmark.district_id == district.id).all())
+    stamped = [cid for cid, is_hidden in rows if not is_hidden]
+    hidden_stamped = [cid for cid, is_hidden in rows if is_hidden]
+    progress = round(len(stamped) / total, 3) if total else 0.0
+    return {
+        "sigunguCode": sigungu_code,
+        "stampedContentIds": stamped,
+        "hiddenStampedContentIds": hidden_stamped,
+        "progress": progress,
+        "hiddenReady": progress >= settings.HIDDEN_STAMP_THRESHOLD,
+    }

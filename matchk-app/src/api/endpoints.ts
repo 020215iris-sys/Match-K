@@ -34,6 +34,45 @@ export interface DistrictProgress {
   progress: number;
 }
 
+// ── 일정(스케줄러) 타입 ─────────────────────────────────
+export interface ItinerarySummary {
+  id: number;
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  dayCount: number;
+  itemCount: number;
+}
+
+export interface ItineraryItem {
+  id: number;
+  contentid: string;
+  dayIndex: number;
+  sortOrder: number;
+  title: string | null;
+  lat: number | null;
+  lng: number | null;
+  sigunguCode: number | null;
+  contenttypeid: string | null;
+}
+
+export interface ItineraryDetail {
+  id: number;
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  dayCount: number;
+  items: ItineraryItem[];
+}
+
+export interface DistrictStampStatus {
+  sigunguCode: number;
+  stampedContentIds: string[];
+  hiddenStampedContentIds: string[];
+  progress: number;
+  hiddenReady: boolean;
+}
+
 export const endpoints = {
   guestLogin: (lang: string) =>
     api<{ token: string; user: { id: number; name: string; lang: string } }>(
@@ -83,7 +122,45 @@ export const endpoints = {
   updateLanguage: (lang: string) =>
     api<{ lang: string }>('/api/users/me/language', { method: 'PATCH', body: { lang } }),
 
-  // 회원탈퇴 — 계정+도장 영구 삭제 (스토어 심사 필수)
+  // 회원탈퇴 — 계정+도장+일정 영구 삭제 (스토어 심사 필수)
   deleteAccount: () =>
     api<null>('/api/users/me', { method: 'DELETE' }),
+
+  // ── 일정(스케줄러) ─────────────────────────────────────
+  itineraries: () => api<{ items: ItinerarySummary[] }>('/api/itineraries'),
+
+  createItinerary: (name: string, startDate?: string, endDate?: string) =>
+    api<{ id: number; name: string; dayCount: number }>('/api/itineraries',
+      { method: 'POST', body: { name, startDate, endDate } }),
+
+  itineraryDetail: (id: number) => api<ItineraryDetail>(`/api/itineraries/${id}`),
+
+  deleteItinerary: (id: number) =>
+    api<null>(`/api/itineraries/${id}`, { method: 'DELETE' }),
+
+  addItineraryItem: (
+    id: number,
+    item: {
+      contentid: string; dayIndex: number;
+      lat?: number | null; lng?: number | null;
+      sigunguCode?: number | null; contenttypeid?: string | null; title?: string | null;
+    },
+  ) =>
+    api<{ id: number; dayIndex: number; sortOrder: number }>(
+      `/api/itineraries/${id}/items`, { method: 'POST', body: item }),
+
+  moveItineraryItem: (id: number, itemId: number, body: { dayIndex?: number; sortOrder?: number }) =>
+    api<{ id: number; dayIndex: number; sortOrder: number }>(
+      `/api/itineraries/${id}/items/${itemId}`, { method: 'PATCH', body }),
+
+  deleteItineraryItem: (id: number, itemId: number) =>
+    api<null>(`/api/itineraries/${id}/items/${itemId}`, { method: 'DELETE' }),
+
+  // 업적지도 3페이지 — 구 도장 상태 + 히든(구별 비율) 발동 여부
+  districtStampStatus: (sigunguCode: number) =>
+    api<DistrictStampStatus>(`/api/stamps/district/${sigunguCode}`),
+
+  // AI(LLM) 추천 검색어/키워드
+  searchSuggestions: (lang: string) =>
+    api<{ items: string[] }>(`/api/search/suggest?lang=${lang}`),
 };

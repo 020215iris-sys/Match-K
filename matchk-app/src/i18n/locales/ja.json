@@ -15,20 +15,33 @@
     "stamped": "スタンプ獲得済み",
     "tooFar": "ランドマークから遠すぎます（{{distance}}m）",
     "stampSuccess": "スタンプを獲得しました！",
-    "autoTranslated": "🔍 自動翻訳 — この言語の公式情報がまだない隠れた場所"
+    "autoTranslated": "🔍 自動翻訳 — この言語の公式情報がまだない隠れた場所",
+    "addToItinerary": "旅程に追加"
   },
   "map": {
     "title": "実績マップ",
-    "progress": "マイコレクション {{stamped}} / 釜山全体 {{total}}"
+    "progress": "マイコレクション {{stamped}} / 釜山全体 {{total}}",
+    "tapBusan": "釜山をタップして区ごとに表示",
+    "hiddenReady": "隠れスタンプを獲得できます！"
   },
   "scheduler": {
     "title": "スケジューラー",
-    "inputPlaceholder": "基準となる場所を検索",
-    "relatedTitle": "一緒に行きたい場所"
+    "addItinerary": "旅程を追加",
+    "namePlaceholder": "旅程名（例：釜山3日）",
+    "pickTarget": "この場所を追加する旅程を選択",
+    "dayCount": "{{count}}日",
+    "dayN": "{{n}}日目",
+    "addPlace": "場所を追加",
+    "startDate": "開始日 (YYYY-MM-DD)",
+    "endDate": "終了日 (YYYY-MM-DD)",
+    "chooseDay": "何日目に追加しますか？",
+    "reorderHint": "▲▼ 並び替え · ▶日 翌日へ · 🗑 削除"
   },
   "search": {
     "noResults": "検索結果がありません",
-    "nearbyInstead": "近くのおすすめスポット"
+    "nearbyInstead": "近くのおすすめスポット",
+    "aiSuggest": "AIおすすめ検索",
+    "recent": "最近の検索"
   },
   "hidden": {
     "encounterTitle": "隠れスポット発見！",
@@ -64,6 +77,7 @@
     "loading": "読み込み中...",
     "error": "読み込めませんでした — ネットワーク/サーバーをご確認ください",
     "retry": "再試行",
-    "close": "閉じる"
+    "close": "閉じる",
+    "create": "作成"
   }
 }

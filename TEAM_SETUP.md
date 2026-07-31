@@ -116,12 +116,12 @@ cd matchk-app && npm run typecheck
 | `matchk-api` | pytest 전체 (실 키 불필요 — 테스트가 자체 주입) | `test` |
 | `matchk-app` | TypeScript 타입체크 (`npm run typecheck`) | `typecheck` |
 
-**깃대장(정현)이 최초 1회 설정할 것** — GitHub 리포 Settings → Branches → `main` 보호 규칙 추가:
+**깃대장(다은)이 최초 1회 설정할 것** — GitHub 리포 Settings → Branches → `main` 보호 규칙 추가:
 
 1. ✅ Require a pull request before merging + Require approvals: **1**
 2. ✅ Require status checks to pass → `test`(api) / `typecheck`(app) 지정
 
-→ 이후로는 **CI 빨간불이거나 리뷰 없는 PR은 머지 버튼이 아예 비활성화**됨. 깃대장(정현)은 규칙을 사람이 아니라 GitHub이 강제하도록 만들고, 본인은 충돌 조정·리뷰 배분·주간 머지 관리 담당.
+→ 이후로는 **CI 빨간불이거나 리뷰 없는 PR은 머지 버튼이 아예 비활성화**됨. 깃대장(다은)은 규칙을 사람이 아니라 GitHub이 강제하도록 만들고, 본인은 충돌 조정·리뷰 배분·주간 머지 관리 담당.
 
 **PR 흐름 (전원)**: feature 브랜치 → push → PR 생성 → CI 초록불 확인 → 리뷰 1명 승인 → 머지 → 브랜치 삭제
 

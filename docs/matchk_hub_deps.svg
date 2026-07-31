@@ -1,0 +1,97 @@
+<svg viewBox="0 0 900 700" xmlns="http://www.w3.org/2000/svg" font-family="'Apple SD Gothic Neo','Malgun Gothic',sans-serif">
+  <defs>
+    <marker id="arw" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 z" fill="#8A97A5"/>
+    </marker>
+    <style>
+      .box{rx:10;ry:10;stroke-width:1.6;}
+      .blue{fill:#EAF1F8;stroke:#185FA5;}
+      .hub{fill:#FDF3DE;stroke:#E8B23A;stroke-width:2.2;}
+      .green{fill:#E8F3EA;stroke:#4C9A5A;}
+      .gray{fill:#ECECEC;stroke:#8A97A5;}
+      .t{fill:#1A1A1A;font-size:13px;font-weight:600;}
+      .ts{fill:#4B5563;font-size:11px;font-weight:400;}
+      .sec{fill:#185FA5;font-size:13px;font-weight:800;letter-spacing:.04em;}
+      .edge{stroke:#8A97A5;stroke-width:1.4;fill:none;}
+      .el{fill:#6B7280;font-size:10.5px;}
+      .center{text-anchor:middle;}
+    </style>
+  </defs>
+
+  <!-- ===== FRONTEND ===== -->
+  <text x="30" y="34" class="sec">프론트엔드 · matchk-app/src  —  공용 허브 중심</text>
+
+  <rect class="box blue" x="34" y="118" width="186" height="66"/>
+  <text class="t center" x="127" y="146">screens/</text>
+  <text class="ts center" x="127" y="165">화면 9개 (Home·Search…)</text>
+
+  <rect class="box hub" x="356" y="40" width="188" height="58"/>
+  <text class="t center" x="450" y="64">RootNavigator ★</text>
+  <text class="ts center" x="450" y="82">라우트 등록 + 파라미터 타입</text>
+
+  <rect class="box hub" x="346" y="232" width="208" height="64"/>
+  <text class="t center" x="450" y="258">appStore · theme · i18n ★</text>
+  <text class="ts center" x="450" y="277">hooks · components · utils/geo</text>
+
+  <rect class="box hub" x="612" y="100" width="158" height="50"/>
+  <text class="t center" x="691" y="122">api/endpoints.ts ★</text>
+  <text class="ts center" x="691" y="139">라우트와 1:1</text>
+
+  <rect class="box blue" x="612" y="176" width="158" height="46"/>
+  <text class="t center" x="691" y="198">api/client.ts</text>
+  <text class="ts center" x="691" y="214">fetch + JWT</text>
+
+  <rect class="box gray" x="800" y="120" width="82" height="60"/>
+  <text class="t center" x="841" y="146">Backend</text>
+  <text class="ts center" x="841" y="163">API</text>
+
+  <path class="edge" d="M356,74 C280,90 210,100 190,116" marker-end="url(#arw)"/>
+  <text class="el center" x="270" y="96">라우트·타입</text>
+  <path class="edge" d="M220,146 C420,150 520,132 610,126" marker-end="url(#arw)"/>
+  <text class="el center" x="430" y="139">API 호출</text>
+  <path class="edge" d="M170,184 C250,225 300,250 344,262" marker-end="url(#arw)"/>
+  <text class="el center" x="248" y="230">사용</text>
+  <path class="edge" d="M691,150 L691,174" marker-end="url(#arw)"/>
+  <path class="edge" d="M770,196 C790,190 795,170 800,158" marker-end="url(#arw)"/>
+
+  <line x1="30" y1="332" x2="870" y2="332" stroke="#E5E7EB" stroke-width="1"/>
+
+  <!-- ===== BACKEND ===== -->
+  <text x="30" y="372" class="sec">백엔드 · matchk-api/app  —  공용 허브 중심</text>
+
+  <rect class="box hub" x="40" y="452" width="128" height="52"/>
+  <text class="t center" x="104" y="482">main.py ★</text>
+
+  <rect class="box blue" x="236" y="450" width="170" height="56"/>
+  <text class="t center" x="321" y="474">routers/</text>
+  <text class="ts center" x="321" y="492">8개 (auth·stamps·itineraries…)</text>
+
+  <rect class="box blue" x="210" y="556" width="292" height="56"/>
+  <text class="t center" x="356" y="580">services/</text>
+  <text class="ts center" x="356" y="598">tourapi_client·recommender·translator·lang_mapping</text>
+
+  <rect class="box green" x="560" y="446" width="230" height="66"/>
+  <text class="t center" x="675" y="472">models/</text>
+  <text class="ts center" x="675" y="491">User·Stamp·Landmark</text>
+  <text class="ts center" x="675" y="505">District·Itinerary</text>
+
+  <rect class="box hub" x="560" y="560" width="230" height="56"/>
+  <text class="t center" x="675" y="584">core/ ★</text>
+  <text class="ts center" x="675" y="602">config · database · security · cache</text>
+
+  <path class="edge" d="M168,478 L236,478" marker-end="url(#arw)"/>
+  <text class="el center" x="202" y="470">등록</text>
+  <path class="edge" d="M321,506 C330,530 340,545 350,555" marker-end="url(#arw)"/>
+  <text class="el center" x="300" y="536">호출</text>
+  <path class="edge" d="M406,472 C480,470 520,476 558,478" marker-end="url(#arw)"/>
+  <text class="el center" x="480" y="464">데이터</text>
+  <path class="edge" d="M406,496 C470,540 510,570 558,584" marker-end="url(#arw)"/>
+  <text class="el center" x="470" y="560">인증·DB</text>
+  <path class="edge" d="M502,588 L558,590" marker-end="url(#arw)"/>
+  <text class="el center" x="530" y="582">설정·캐시</text>
+  <path class="edge" d="M675,512 L675,560" marker-end="url(#arw)"/>
+  <text class="el center" x="695" y="540">Base</text>
+
+  <text x="30" y="662" class="el">★ 금색 = 공용 허브 (여러 곳이 의존 → 팀 규칙상 단독 PR로 먼저 머지)</text>
+  <text x="30" y="680" class="el">화살표 방향 = "A가 B에 의존". 서로 다른 파일·함수를 만지는 작업은 병렬해도 충돌 없음.</text>
+</svg>

@@ -15,20 +15,33 @@
     "stamped": "Stamp collected",
     "tooFar": "Too far from the landmark ({{distance}}m)",
     "stampSuccess": "Stamp collected!",
-    "autoTranslated": "🔍 Auto-translated — a hidden spot with no official info in your language yet"
+    "autoTranslated": "🔍 Auto-translated — a hidden spot with no official info in your language yet",
+    "addToItinerary": "Add to itinerary"
   },
   "map": {
     "title": "Achievement Map",
-    "progress": "My collection {{stamped}} / Busan total {{total}}"
+    "progress": "My collection {{stamped}} / Busan total {{total}}",
+    "tapBusan": "Tap Busan to view by district",
+    "hiddenReady": "A hidden stamp is available!"
   },
   "scheduler": {
     "title": "Scheduler",
-    "inputPlaceholder": "Search a starting place",
-    "relatedTitle": "Great places nearby"
+    "addItinerary": "Add itinerary",
+    "namePlaceholder": "Itinerary name (e.g. Busan 3 days)",
+    "pickTarget": "Choose an itinerary to add this place",
+    "dayCount": "{{count}} days",
+    "dayN": "Day {{n}}",
+    "addPlace": "Add place",
+    "startDate": "Start (YYYY-MM-DD)",
+    "endDate": "End (YYYY-MM-DD)",
+    "chooseDay": "Which day?",
+    "reorderHint": "▲▼ reorder · ▶日 next day · 🗑 delete"
   },
   "search": {
     "noResults": "No results found",
-    "nearbyInstead": "Recommended nearby"
+    "nearbyInstead": "Recommended nearby",
+    "aiSuggest": "AI suggested searches",
+    "recent": "Recent searches"
   },
   "hidden": {
     "encounterTitle": "Hidden spot found!",
@@ -64,6 +77,7 @@
     "loading": "Loading...",
     "error": "Couldn't load — check network/server",
     "retry": "Retry",
-    "close": "Close"
+    "close": "Close",
+    "create": "Create"
   }
 }

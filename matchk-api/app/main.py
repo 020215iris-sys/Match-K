@@ -10,7 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.core.database import Base, engine
-from app.routers import auth, health, hidden, landmarks, recommendations, search, stamps, users
+from app.routers import (
+    auth, health, hidden, itineraries, landmarks, recommendations, search, stamps, users,
+)
 from app.services.tourapi_client import TourApiError
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
@@ -29,7 +31,8 @@ app.add_middleware(
 )
 
 for router in (health.router, auth.router, landmarks.router, stamps.router,
-               recommendations.router, search.router, users.router, hidden.router):
+               recommendations.router, search.router, users.router, hidden.router,
+               itineraries.router):
     app.include_router(router)
 
 

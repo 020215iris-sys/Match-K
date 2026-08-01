@@ -15,20 +15,33 @@
     "stamped": "도장 획득 완료",
     "tooFar": "랜드마크에서 너무 멀어요 ({{distance}}m)",
     "stampSuccess": "도장을 획득했어요!",
-    "autoTranslated": "🔍 자동 번역됨 — 아직 이 언어의 공식 정보가 없는 숨은 곳"
+    "autoTranslated": "🔍 자동 번역됨 — 아직 이 언어의 공식 정보가 없는 숨은 곳",
+    "addToItinerary": "일정에 추가"
   },
   "map": {
     "title": "업적지도",
-    "progress": "내 컬렉션 {{stamped}} / 부산 전체 {{total}}"
+    "progress": "내 컬렉션 {{stamped}} / 부산 전체 {{total}}",
+    "tapBusan": "부산을 눌러 구별로 보기",
+    "hiddenReady": "히든 도장을 찍을 수 있어요!"
   },
   "scheduler": {
     "title": "스케줄러",
-    "inputPlaceholder": "기준 장소를 검색하세요",
-    "relatedTitle": "함께 가면 좋은 곳"
+    "addItinerary": "일정 추가",
+    "namePlaceholder": "일정 이름 (예: 부산 3일)",
+    "pickTarget": "이 장소를 담을 일정을 고르세요",
+    "dayCount": "{{count}}일",
+    "dayN": "{{n}}일차",
+    "addPlace": "장소 추가",
+    "startDate": "시작일 (YYYY-MM-DD)",
+    "endDate": "종료일 (YYYY-MM-DD)",
+    "chooseDay": "며칠차에 담을까요?",
+    "reorderHint": "▲▼ 순서 변경 · ▶日 다음 날로 이동 · 🗑 삭제"
   },
   "search": {
     "noResults": "검색 결과가 없어요",
-    "nearbyInstead": "근처 추천 여행지"
+    "nearbyInstead": "근처 추천 여행지",
+    "aiSuggest": "AI 추천 검색어",
+    "recent": "최근 검색어"
   },
   "hidden": {
     "encounterTitle": "숨은 곳 발견!",
@@ -64,6 +77,7 @@
     "loading": "불러오는 중...",
     "error": "불러오지 못했어요 — 네트워크/서버를 확인해주세요",
     "retry": "다시 시도",
-    "close": "닫기"
+    "close": "닫기",
+    "create": "만들기"
   }
 }

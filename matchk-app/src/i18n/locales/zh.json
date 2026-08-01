@@ -15,20 +15,33 @@
     "stamped": "已获得印章",
     "tooFar": "距离地标太远（{{distance}}米）",
     "stampSuccess": "获得印章！",
-    "autoTranslated": "🔍 自动翻译 — 您的语言尚无官方信息的隐藏景点"
+    "autoTranslated": "🔍 自动翻译 — 您的语言尚无官方信息的隐藏景点",
+    "addToItinerary": "添加到行程"
   },
   "map": {
     "title": "成就地图",
-    "progress": "我的收藏 {{stamped}} / 釜山全部 {{total}}"
+    "progress": "我的收藏 {{stamped}} / 釜山全部 {{total}}",
+    "tapBusan": "点击釜山按区查看",
+    "hiddenReady": "可以获得隐藏印章！"
   },
   "scheduler": {
     "title": "行程助手",
-    "inputPlaceholder": "搜索出发地点",
-    "relatedTitle": "适合一起游览的地方"
+    "addItinerary": "添加行程",
+    "namePlaceholder": "行程名称（例：釜山3天）",
+    "pickTarget": "选择要添加此地点的行程",
+    "dayCount": "{{count}}天",
+    "dayN": "第{{n}}天",
+    "addPlace": "添加地点",
+    "startDate": "开始日期 (YYYY-MM-DD)",
+    "endDate": "结束日期 (YYYY-MM-DD)",
+    "chooseDay": "添加到第几天？",
+    "reorderHint": "▲▼ 排序 · ▶日 移到次日 · 🗑 删除"
   },
   "search": {
     "noResults": "没有搜索结果",
-    "nearbyInstead": "附近推荐"
+    "nearbyInstead": "附近推荐",
+    "aiSuggest": "AI推荐搜索",
+    "recent": "最近搜索"
   },
   "hidden": {
     "encounterTitle": "发现隐藏景点！",
@@ -64,6 +77,7 @@
     "loading": "加载中...",
     "error": "加载失败 — 请检查网络/服务器",
     "retry": "重试",
-    "close": "关闭"
+    "close": "关闭",
+    "create": "创建"
   }
 }

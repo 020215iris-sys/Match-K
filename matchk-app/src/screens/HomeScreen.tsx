@@ -1,26 +1,18 @@
-/** 홈 화면 (D3 [A], Trip.com 스타일 §6-3).
- *  검색창 입력 시 자동 카드가 밀리고 결과 표시 (§6-6, 디바운싱 400ms). */
+/** 홈 화면 — 검색은 별도 화면(Search)으로 분리 (2026-07-31 개편).
+ *  구성: 검색창(→Search) · 원형버튼(스케줄러/업적지도) · 역추천 카드 · 마스코트. */
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
-import {
-  FlatList, Pressable, ScrollView, StyleSheet, Text, TextInput, View,
-} from 'react-native';
+import { FlatList, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import * as Location from 'expo-location';
-
-import { endpoints, Recommendation, TourItem } from '@/api/endpoints';
+import { endpoints, Recommendation } from '@/api/endpoints';
 import CircleButton from '@/components/CircleButton';
 import ErrorNotice from '@/components/ErrorNotice';
-import HiddenEncounterPopup from '@/components/HiddenEncounterPopup';
-import Mascot from '@/components/Mascot';
-import { useHiddenEncounter } from '@/hooks/useHiddenEncounter';
-import { haversineM, STAMP_RADIUS_M } from '@/utils/geo';
 import IntroPopup from '@/components/IntroPopup';
 import LandmarkCard from '@/components/LandmarkCard';
-import { useDebounce } from '@/hooks/useDebounce';
+import Mascot from '@/components/Mascot';
 import { BUSAN_CENTER, useLocation } from '@/hooks/useLocation';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
 import { useAppStore } from '@/store/appStore';
@@ -37,40 +29,8 @@ export default function HomeScreen() {
   const [cards, setCards] = useState<Recommendation[]>([]);
   const [cardsError, setCardsError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
-  const [query, setQuery] = useState('');
-  const debouncedQuery = useDebounce(query, 400);
-  const [results, setResults] = useState<TourItem[] | null>(null);
-  const [fallback, setFallback] = useState<TourItem[]>([]);
-  const [hiddenUnlocked, setHiddenUnlocked] = useState(false);
-  const [collecting, setCollecting] = useState(false);
 
-  // 히든 미션 잠금 해제 여부 확인 → 해제 시 조우 감지 시작
-  useEffect(() => {
-    endpoints.hiddenStatus().then((s) => setHiddenUnlocked(s.unlocked)).catch(() => {});
-  }, [reloadKey]);
-  const { encounter, dismiss } = useHiddenEncounter(hiddenUnlocked);
-
-  // 히든 도장 수집 — 위치 검증은 단말기 내에서 (위치정보보호법)
-  const collectHidden = async () => {
-    if (!encounter) return;
-    setCollecting(true);
-    try {
-      const detail = await endpoints.landmarkDetail(encounter.contentid, lang);
-      if (detail.stampLat != null && detail.stampLng != null) {
-        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
-        const d = haversineM(pos.coords.latitude, pos.coords.longitude, detail.stampLat, detail.stampLng);
-        if (d > STAMP_RADIUS_M) { dismiss(); return; }
-      }
-      await endpoints.createStamp(encounter.contentid);
-      dismiss();
-    } catch {
-      dismiss();
-    } finally {
-      setCollecting(false);
-    }
-  };
-
-  // GPS 기반 근처 역추천 카드 (D6 [A]) — 실패 시 에러 표시 (조용한 빈 화면 금지)
+  // GPS 기반 근처 역추천 카드 — 실패 시 에러 표시(조용한 빈 화면 금지)
   useEffect(() => {
     const pos = location ?? BUSAN_CENTER;
     setCardsError(null);
@@ -83,38 +43,12 @@ export default function HomeScreen() {
       });
   }, [location, lang, reloadKey]);
 
-  // 검색 (실시간 TourAPI, D6 [B])
-  useEffect(() => {
-    if (!debouncedQuery.trim()) {
-      setResults(null);
-      return;
-    }
-    endpoints
-      .search(debouncedQuery.trim(), lang)
-      .then((res) => {
-        setResults(res.items);
-        setFallback(res.fallbackNearby);
-      })
-      .catch(() => setResults([]));
-  }, [debouncedQuery, lang]);
-
   const openDetail = (contentid: string, title: string) =>
     navigation.navigate('LandmarkDetail', { contentid, title });
-
-  const searching = results !== null;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <IntroPopup onSelect={openDetail} />
-      {encounter && (
-        <HiddenEncounterPopup
-          contentid={encounter.contentid}
-          lang={lang}
-          collecting={collecting}
-          onCollect={collectHidden}
-          onDismiss={dismiss}
-        />
-      )}
 
       {/* 상단바 */}
       <View style={styles.topBar}>
@@ -123,70 +57,43 @@ export default function HomeScreen() {
           <Text style={styles.profileIcon}>👤</Text>
         </Pressable>
       </View>
-      <TextInput
-        style={styles.search}
-        placeholder={t('home.searchPlaceholder')}
-        placeholderTextColor={colors.textSecondary}
-        value={query}
-        onChangeText={setQuery}
-        returnKeyType="search"
-      />
+
+      {/* 검색창 — 탭하면 별도 검색 화면으로 이동 (인라인 검색 제거) */}
+      <Pressable style={styles.search} onPress={() => navigation.navigate('Search')}>
+        <Text style={styles.searchPlaceholder}>🔍  {t('home.searchPlaceholder')}</Text>
+      </Pressable>
 
       <ScrollView contentContainerStyle={styles.body}>
-        {!searching && (
-          <View style={styles.circleRow}>
-            <CircleButton label={t('home.scheduler')} emoji="🗓️" onPress={() => navigation.navigate('Scheduler')} />
-            <CircleButton label={t('home.achievementMap')} emoji="🗺️" onPress={() => navigation.navigate('AchievementMap')} />
-          </View>
-        )}
+        <View style={styles.circleRow}>
+          <CircleButton label={t('home.scheduler')} emoji="🗓️" onPress={() => navigation.navigate('SchedulerMain')} />
+          <CircleButton label={t('home.achievementMap')} emoji="🗺️" onPress={() => navigation.navigate('AchievementMap')} />
+        </View>
 
-        {searching ? (
-          <View style={styles.section}>
-            {results.length === 0 ? (
-              <>
-                <Text style={styles.sectionTitle}>{t('search.noResults')}</Text>
-                <Text style={styles.sectionTitle}>{t('search.nearbyInstead')}</Text>
-                <FlatList
-                  horizontal showsHorizontalScrollIndicator={false} data={fallback}
-                  keyExtractor={(i) => i.contentid}
-                  renderItem={({ item }) => (
-                    <LandmarkCard title={item.title} imageUrl={item.firstimage}
-                      subtitle={item.addr1} onPress={() => openDetail(item.contentid, item.title)} />
-                  )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>{t('home.nextTrips')}</Text>
+          {cardsError !== null ? (
+            <ErrorNotice detail={cardsError} onRetry={() => setReloadKey((k) => k + 1)} />
+          ) : (
+            <FlatList
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              data={cards}
+              keyExtractor={(i) => i.contentid}
+              renderItem={({ item }) => (
+                <LandmarkCard
+                  title={item.title}
+                  imageUrl={item.image}
+                  badge={item.reasons.includes('hidden_district') ? '✦' : undefined}
+                  onPress={() => openDetail(item.contentid, item.title)}
                 />
-              </>
-            ) : (
-              results.map((item) => (
-                <Pressable key={item.contentid} style={styles.resultRow}
-                  onPress={() => openDetail(item.contentid, item.title)}>
-                  <Text style={styles.resultTitle}>{item.title}</Text>
-                  <Text style={styles.resultAddr} numberOfLines={1}>{item.addr1}</Text>
-                </Pressable>
-              ))
-            )}
-          </View>
-        ) : (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t('home.nextTrips')}</Text>
-            {cardsError !== null ? (
-              <ErrorNotice detail={cardsError} onRetry={() => setReloadKey((k) => k + 1)} />
-            ) : (
-              <FlatList
-                horizontal showsHorizontalScrollIndicator={false} data={cards}
-                keyExtractor={(i) => i.contentid}
-                renderItem={({ item }) => (
-                  <LandmarkCard title={item.title} imageUrl={item.image}
-                    badge={item.reasons.includes('hidden_district') ? '✦' : undefined}
-                    onPress={() => openDetail(item.contentid, item.title)} />
-                )}
-              />
-            )}
-          </View>
-        )}
+              )}
+            />
+          )}
+        </View>
       </ScrollView>
 
-      {/* 역추천의 얼굴 — 검색 중이 아닐 때만 떠 있음 (GPS 근처 추천) */}
-      {!searching && <Mascot recType="nearby" lat={location?.lat} lng={location?.lng} />}
+      {/* 역추천의 얼굴 (GPS 근처 추천) */}
+      <Mascot recType="nearby" lat={location?.lat} lng={location?.lng} />
     </SafeAreaView>
   );
 }
@@ -198,13 +105,11 @@ const styles = StyleSheet.create({
   profileIcon: { fontSize: 22 },
   search: {
     marginHorizontal: 20, marginTop: 12, backgroundColor: colors.surface,
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: colors.textPrimary,
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
   },
+  searchPlaceholder: { fontSize: 15, color: colors.textSecondary },
   body: { paddingBottom: 32 },
   circleRow: { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
   section: { marginTop: 28, paddingLeft: 20 },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 12 },
-  resultRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border, marginRight: 20 },
-  resultTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
-  resultAddr: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },
 });

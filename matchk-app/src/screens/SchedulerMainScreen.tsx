@@ -4,7 +4,17 @@ import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/nativ
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import {
+  Alert,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { endpoints, ItinerarySummary } from '@/api/endpoints';
@@ -56,7 +66,10 @@ export default function SchedulerMainScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
       {addPlace ? <Text style={styles.banner}>{t('scheduler.pickTarget')}</Text> : null}
 
       {items.length === 0 && !creating ? (
@@ -110,57 +123,120 @@ export default function SchedulerMainScreen() {
               autoCapitalize="none"
             />
           </View>
-          {/* TODO(다은): 텍스트 대신 캘린더 피커로 교체 (@react-native-community/datetimepicker 등) */}
+
           <Pressable style={styles.createBtnWide} onPress={create}>
             <Text style={styles.createBtnText}>{t('common.create')}</Text>
           </Pressable>
         </View>
-      ) : (
-        <Pressable style={styles.fab} onPress={() => setCreating(true)}>
+      ) : items.length > 0 ? (
+        <Pressable
+          style={styles.fab}
+          onPress={() => setCreating(true)}
+        >
           <Text style={styles.fabText}>＋</Text>
         </Pressable>
-      )}
-    </View>
+      ) : null}
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   banner: {
-    backgroundColor: colors.surface, color: colors.primary, fontWeight: '700',
-    paddingHorizontal: 20, paddingVertical: 12, fontSize: 14,
+    backgroundColor: colors.surface,
+    color: colors.primary,
+    fontWeight: '700',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    fontSize: 14,
   },
   emptyWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   plusBig: {
-    width: 88, height: 88, borderRadius: 44, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
+    width: 88,
+    height: 88,
+    borderRadius: 44,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   plusBigText: { color: '#fff', fontSize: 44, lineHeight: 48 },
-  emptyLabel: { marginTop: 14, fontSize: 15, fontWeight: '600', color: colors.textSecondary },
+  emptyLabel: {
+    marginTop: 14,
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
   list: { padding: 20 },
   fileRow: {
-    backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 12,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
   },
-  fileName: { fontSize: 16, fontWeight: '700', color: colors.textPrimary },
-  fileMeta: { marginTop: 4, fontSize: 12, color: colors.textSecondary },
-  createBox: { padding: 16, borderTopWidth: 1, borderTopColor: colors.border },
+  fileName: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textPrimary,
+  },
+  fileMeta: {
+    marginTop: 4,
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  createBox: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
   input: {
-    backgroundColor: colors.surface, borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: colors.textPrimary,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: colors.textPrimary,
   },
-  dateRow: { flexDirection: 'row', marginTop: 10 },
-  dateInput: { flex: 1 },
-  dateInputRight: { marginLeft: 10 },
+  dateRow: {
+    flexDirection: 'row',
+    marginTop: 10,
+  },
+  dateInput: {
+    flex: 1,
+  },
+  dateInputRight: {
+    marginLeft: 10,
+  },
   createBtnWide: {
-    marginTop: 10, backgroundColor: colors.primary, borderRadius: 12,
-    paddingVertical: 14, alignItems: 'center',
+    marginTop: 10,
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
   },
-  createBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
+  createBtnText: {
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '700',
+  },
   fab: {
-    position: 'absolute', right: 24, bottom: 28,
-    width: 60, height: 60, borderRadius: 30, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 6, shadowOffset: { width: 0, height: 3 }, elevation: 5,
+    position: 'absolute',
+    right: 24,
+    bottom: 28,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+    elevation: 5,
   },
-  fabText: { color: '#fff', fontSize: 34, lineHeight: 38 },
+  fabText: {
+    color: '#fff',
+    fontSize: 34,
+    lineHeight: 38,
+  },
 });

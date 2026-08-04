@@ -32,6 +32,13 @@ export function useAuth() {
     setUser(null);
   };
 
+  // 구글 로그인 — 앱에서 받은 id_token을 서버로 보내 검증받고 JWT 저장
+  const loginWithGoogle = async (idToken: string) => {
+    const res = await endpoints.googleLogin(idToken);
+    await setToken(res.token);
+    setUser(res.user.name);
+  };
+
   // 회원탈퇴 — 서버에서 계정·도장 삭제 후 로컬 토큰 정리
   const deleteAccount = async () => {
     await endpoints.deleteAccount();
@@ -39,5 +46,5 @@ export function useAuth() {
     setUser(null);
   };
 
-  return { ready, logout, deleteAccount };
+  return { ready, logout, deleteAccount, loginWithGoogle };
 }

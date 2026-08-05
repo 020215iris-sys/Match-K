@@ -32,9 +32,9 @@ export function useAuth() {
     setUser(null);
   };
 
-  // 구글 로그인 — 앱에서 받은 id_token을 서버로 보내 검증받고 JWT 저장
-  const loginWithGoogle = async (idToken: string) => {
-    const res = await endpoints.googleLogin(idToken);
+  // 구글 로그인 — 앱에서 받은 액세스 토큰을 서버로 보내 검증받고 JWT 저장
+  const loginWithGoogle = async (accessToken: string) => {
+    const res = await endpoints.googleLogin(accessToken);
     await setToken(res.token);
     setUser(res.user.name);
   };

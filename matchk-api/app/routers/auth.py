@@ -71,24 +71,22 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
 
 
 class GoogleMobileLogin(BaseModel):
-    idToken: str
+    accessToken: str
 
 
 @router.post("/google/mobile")
 async def google_mobile(body: GoogleMobileLogin, db: Session = Depends(get_db)):
-    """앱(expo-auth-session)이 받은 id_token을 검증 후 우리 JWT 발급.
+    """앱(expo-auth-session)이 받은 액세스 토큰을 검증 후 우리 JWT 발급.
 
-    앱은 구글과 직접 통신해 id_token을 받고, 그 토큰만 서버로 보낸다.
-    서버는 구글 tokeninfo로 서명·만료를 검증하고 aud(우리 클라이언트 ID)인지 확인.
+    안드로이드/iOS 설치형 앱은 id_token 미지원이라 액세스 토큰 방식 사용.
+    서버가 그 토큰으로 구글 userinfo를 조회 → 유효하면 유저 upsert.
     """
     async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(GOOGLE_TOKENINFO, params={"id_token": body.idToken})
+        resp = await client.get(GOOGLE_USERINFO,
+                                headers={"Authorization": f"Bearer {body.accessToken}"})
     if resp.status_code != 200:
         raise HTTPException(401, "invalid_google_token")
     info = resp.json()
-    allowed = settings.google_allowed_aud
-    if allowed and info.get("aud") not in allowed:
-        raise HTTPException(401, "google_aud_mismatch")
     if not info.get("sub"):
         raise HTTPException(401, "google_no_sub")
     user = _upsert_google_user(db, info)

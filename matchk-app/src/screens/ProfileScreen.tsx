@@ -28,18 +28,18 @@ export default function ProfileScreen() {
   const { lang, setLang, userName } = useAppStore();
   const { logout, deleteAccount, loginWithGoogle } = useAuth();
 
-  // 구글 로그인 (id_token 방식). 클라이언트 ID는 .env에서 주입 (dev build 후 채워짐).
-  const [, googleResponse, promptGoogle] = Google.useIdTokenAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  // 구글 로그인 (액세스 토큰 방식 — 설치형 앱은 id_token 미지원이라 이 방식 사용).
+  const [, googleResponse, promptGoogle] = Google.useAuthRequest({
+    webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
     iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
     androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
   });
 
   useEffect(() => {
     if (googleResponse?.type !== 'success') return;
-    const idToken = googleResponse.params?.id_token;
-    if (!idToken) return;
-    loginWithGoogle(idToken)
+    const accessToken = googleResponse.authentication?.accessToken;
+    if (!accessToken) return;
+    loginWithGoogle(accessToken)
       .then(() => Alert.alert('✓', t('profile.loginGoogle')))
       .catch(() => Alert.alert(t('common.error')));
   }, [googleResponse]);

@@ -78,10 +78,10 @@ export const endpoints = {
     api<{ token: string; user: { id: number; name: string; lang: string } }>(
       `/auth/guest?lang=${lang}`, { method: 'POST', auth: false }),
 
-  // 구글 로그인 — 앱이 받은 id_token을 서버가 검증 후 우리 JWT 발급
-  googleLogin: (idToken: string) =>
+  // 구글 로그인 — 앱이 받은 액세스 토큰을 서버가 검증 후 우리 JWT 발급
+  googleLogin: (accessToken: string) =>
     api<{ token: string; user: { id: number; name: string; lang: string } }>(
-      '/auth/google/mobile', { method: 'POST', auth: false, body: { idToken } }),
+      '/auth/google/mobile', { method: 'POST', auth: false, body: { accessToken } }),
 
   recommendations: (type: 'auto' | 'nearby', lang: string, lat?: number, lng?: number) => {
     const pos = lat != null && lng != null ? `&lat=${lat}&lng=${lng}` : '';

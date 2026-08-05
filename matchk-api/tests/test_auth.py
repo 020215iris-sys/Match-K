@@ -18,10 +18,10 @@ def test_guest_login_works():
     assert r.json()["token"]
 
 
-def test_google_mobile_requires_idtoken():
-    # 필수 필드 누락은 네트워크 없이 검증됨 (422)
+def test_google_mobile_requires_access_token():
+    # 필수 필드(accessToken) 누락은 네트워크 없이 검증됨 (422)
     r = client.post("/auth/google/mobile", json={})
     assert r.status_code == 422
 
-# 참고: 잘못된 id_token → 401 동작은 실제 구글 호출이 필요해 단위 테스트에서는 생략.
+# 참고: 잘못된 액세스 토큰 → 401 동작은 실제 구글 호출이 필요해 단위 테스트에서는 생략.
 #       실환경/CI(네트워크 가능)에서 dev build로 확인.

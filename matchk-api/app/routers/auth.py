@@ -5,6 +5,7 @@ Google Cloud Console에서 클라이언트 ID/시크릿 발급 후 .env에 설�
 """
 import httpx
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
@@ -19,6 +20,20 @@ settings = get_settings()
 GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN = "https://oauth2.googleapis.com/token"
 GOOGLE_USERINFO = "https://openidconnect.googleapis.com/v1/userinfo"
+GOOGLE_TOKENINFO = "https://oauth2.googleapis.com/tokeninfo"
+
+
+def _upsert_google_user(db: Session, info: dict) -> User:
+    """구글 프로필(sub/email/name/locale)로 유저 생성 또는 조회."""
+    user = db.query(User).filter(User.google_sub == info["sub"]).first()
+    if user is None:
+        user = User(google_sub=info["sub"], email=info.get("email"),
+                    display_name=info.get("name", "Traveler"),
+                    lang=normalize_lang(info.get("locale")))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+    return user
 
 
 @router.get("/google/url")
@@ -51,14 +66,30 @@ async def google_callback(code: str, db: Session = Depends(get_db)):
             raise HTTPException(401, "google_userinfo_failed")
         info = info_resp.json()
 
-    user = db.query(User).filter(User.google_sub == info["sub"]).first()
-    if user is None:
-        user = User(google_sub=info["sub"], email=info.get("email"),
-                    display_name=info.get("name", "Traveler"),
-                    lang=normalize_lang(info.get("locale")))
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+    user = _upsert_google_user(db, info)
+    return {"token": create_jwt(user.id), "user": {"id": user.id, "name": user.display_name, "lang": user.lang}}
+
+
+class GoogleMobileLogin(BaseModel):
+    accessToken: str
+
+
+@router.post("/google/mobile")
+async def google_mobile(body: GoogleMobileLogin, db: Session = Depends(get_db)):
+    """앱(expo-auth-session)이 받은 액세스 토큰을 검증 후 우리 JWT 발급.
+
+    안드로이드/iOS 설치형 앱은 id_token 미지원이라 액세스 토큰 방식 사용.
+    서버가 그 토큰으로 구글 userinfo를 조회 → 유효하면 유저 upsert.
+    """
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        resp = await client.get(GOOGLE_USERINFO,
+                                headers={"Authorization": f"Bearer {body.accessToken}"})
+    if resp.status_code != 200:
+        raise HTTPException(401, "invalid_google_token")
+    info = resp.json()
+    if not info.get("sub"):
+        raise HTTPException(401, "google_no_sub")
+    user = _upsert_google_user(db, info)
     return {"token": create_jwt(user.id), "user": {"id": user.id, "name": user.display_name, "lang": user.lang}}
 
 

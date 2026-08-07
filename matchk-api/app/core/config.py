@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     PAPAGO_CLIENT_ID: str = ""
     PAPAGO_CLIENT_SECRET: str = ""
 
+    # Claude API — 검색 AI 추천어 생성 (search_suggest.py). 미설정 시 고정 샘플로 폴백.
+    ANTHROPIC_API_KEY: str = ""
+
     # 시연 모드 (D4 [B]): true면 요청 body의 mock 좌표 허용. 발표 시 투명하게 공개.
     DEMO_MODE: bool = False
     GPS_RADIUS_M: int = 100

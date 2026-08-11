@@ -45,6 +45,7 @@ adb reverse tcp:8081 tcp:8081
 ### ④ Expo 실행 — **`--go --offline`로 로그인 질문 자체를 회피**
 ```powershell
 $env:CI=$null   # 혹시 이전에 CI=true 설정했었다면 해제
+cd C:\Match-K\matchk-app
 npx expo start --go --offline
 ```
 - `Using Expo Go`가 바로 뜨고 로그인 질문 없이 조용히 로그 대기 상태로 넘어가면 성공

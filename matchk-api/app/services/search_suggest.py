@@ -9,6 +9,17 @@
   (translator.py와 동일한 그레이스풀 디그레이드 패턴).
 - 결과는 5분 캐시 (같은 언어권 반복 호출 절약).
 
+⚠️ 웹 검색 도구 사용 (2026-08-11, 팀 논의 후 결정): 계절 추천(1번 카테고리)은 TourAPI에
+"이번 달 인기" 같은 데이터가 없어서, Claude의 web_search 도구를 켜서 실제 최신 정보
+(부산 현재 날씨·계절 트렌드 등)를 검색해 반영하게 함. 호출당 max_uses=3으로 검색 횟수
+상한을 걸어 비용 통제. 검색 실패해도 기존처럼 고정 샘플로 폴백되니 앱은 안 죽음.
+
+⚠️ display/keyword 분리 (2026-08-12, 재적용): "부산 국밥 추천" 같은 자연스러운 문장을
+그대로 검색어로 쓰면 TourAPI 키워드 검색(제목 그대로 매칭)에서 0건이 나옴 — 실기기
+테스트로 두 번째 확인. 각 추천은 화면에 "보여줄 문장"(display)과 "실제로 검색에 쓸
+짧은 핵심단어"(keyword)를 분리해서 함께 생성한다. 프론트는 display를 보여주고,
+탭하면 keyword로 검색한다 (SearchScreen.tsx, endpoints.ts도 같이 수정 필요).
+
 카테고리 3개는 예시일 뿐, 나중에 바뀔 수 있음 — _CATEGORY_HINT만 고치면 됨.
 """
 import asyncio
@@ -27,10 +38,26 @@ _ATTRACTION_TYPE = 12
 _RESTAURANT_TYPE = 39
 
 FALLBACK_SAMPLES = {
-    "ko": ["8월에 가기 좋은 부산 여행지", "부산 국밥집 추천", "부산 시원한 대형카페"],
-    "en": ["Great Busan trips for August", "Best gukbap spots in Busan", "Big cool cafes in Busan"],
-    "ja": ["8月におすすめの釜山旅行地", "釜山のグクパブおすすめ店", "釜山の涼しい大型カフェ"],
-    "zh": ["8月适合去的釜山旅行地", "釜山推荐猪肉汤饭店", "釜山凉爽大型咖啡厅"],
+    "ko": [
+        {"display": "8월에 가기 좋은 부산 여행지", "keyword": "해운대"},
+        {"display": "부산 국밥집 추천", "keyword": "국밥"},
+        {"display": "부산 시원한 대형카페", "keyword": "카페"},
+    ],
+    "en": [
+        {"display": "Great Busan trips for August", "keyword": "Haeundae"},
+        {"display": "Best gukbap spots in Busan", "keyword": "gukbap"},
+        {"display": "Big cool cafes in Busan", "keyword": "cafe"},
+    ],
+    "ja": [
+        {"display": "8月におすすめの釜山旅行地", "keyword": "海雲台"},
+        {"display": "釜山のグクパブおすすめ店", "keyword": "グクパブ"},
+        {"display": "釜山の涼しい大型カフェ", "keyword": "カフェ"},
+    ],
+    "zh": [
+        {"display": "8月适合去的釜山旅行地", "keyword": "海云台"},
+        {"display": "釜山推荐猪肉汤饭店", "keyword": "猪肉汤饭"},
+        {"display": "釜山凉爽大型咖啡厅", "keyword": "咖啡厅"},
+    ],
 }
 
 _LANG_NAME = {"ko": "Korean", "en": "English", "ja": "Japanese", "zh": "Simplified Chinese"}
@@ -38,7 +65,18 @@ _LANG_NAME = {"ko": "Korean", "en": "English", "ja": "Japanese", "zh": "Simplifi
 _SUGGEST_SCHEMA = {
     "type": "object",
     "properties": {
-        "suggestions": {"type": "array", "items": {"type": "string"}},
+        "suggestions": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "display": {"type": "string"},
+                    "keyword": {"type": "string"},
+                },
+                "required": ["display", "keyword"],
+                "additionalProperties": False,
+            },
+        },
     },
     "required": ["suggestions"],
     "additionalProperties": False,
@@ -70,7 +108,7 @@ async def _category_samples() -> dict[str, list[str]]:
     return samples
 
 
-def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> list[str] | None:
+def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> list[dict[str, str]] | None:
     """동기 SDK 호출 — asyncio.to_thread로 감싸서 이벤트루프 안 막음."""
     try:
         import anthropic
@@ -86,40 +124,66 @@ def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> l
 
     prompt = (
         "You write search-suggestion chips for a Busan (South Korea) tourism app's "
-        "search screen (shown before the user types anything). Write exactly 3 short "
-        f"suggestions in {lang_name}, one per category below, each under 8 words, "
-        "no numbering, no quotes:\n"
+        "search screen (shown before the user types anything). Write exactly 3 suggestions "
+        f"in {lang_name}, one per category below. Each suggestion needs TWO fields:\n"
+        "- \"display\": a short natural search-query phrase a tourist would type "
+        "(style like 'Great Busan trips for August', 'Best gukbap spots in Busan'), under 8 words, "
+        "no numbering, no quotes.\n"
+        "- \"keyword\": a SHORT literal word or two (1-3 words) that this app's search will use "
+        "AS-IS against place-title text — it must be a term likely to appear literally inside a "
+        "real place name/title (e.g. a place name, a food/venue type like '국밥' or '카페'), "
+        "NOT a sentence, NOT a description, NOT the same text as display.\n"
         f"1. A seasonal travel-spot suggestion for the current month (month {month} of the year) "
-        f"in Busan. Real attraction names in Busan for reference: {_fmt('attraction')}.\n"
+        f"in Busan. You have a web_search tool — use it (a couple of searches at most) to check "
+        f"the current/typical weather and what's seasonally trending in Busan right now, so the "
+        f"display text is genuinely timely, not just generic. For keyword, still pick a short "
+        f"literal place-name term (not a weather description). Real attraction names for reference: "
+        f"{_fmt('attraction')}.\n"
         f"2. A restaurant-category suggestion (e.g. a popular local food style). "
         f"Real restaurant names in Busan for reference: {_fmt('restaurant')}.\n"
         f"3. A cafe-category suggestion (e.g. a large/scenic cafe). "
         f"Real cafe names in Busan for reference: {_fmt('cafe')}.\n"
-        "Suggestions should read like natural search queries a tourist would type "
-        "(style like 'Great Busan trips for August', 'Best gukbap spots in Busan'), "
-        "not full sentences, and not necessarily the literal reference names."
+        "After any searching, your FINAL message must be ONLY the JSON matching the schema "
+        "— no commentary about what you searched."
     )
 
     try:
         client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY)
         response = client.messages.create(
             model="claude-opus-5",
-            max_tokens=300,
+            max_tokens=1024,
+            tools=[{"type": "web_search_20260209", "name": "web_search", "max_uses": 3}],
             output_config={
                 "effort": "low",
                 "format": {"type": "json_schema", "schema": _SUGGEST_SCHEMA},
             },
             messages=[{"role": "user", "content": prompt}],
         )
-        text = next(b.text for b in response.content if b.type == "text")
-        data = json.loads(text)
-        items = [s.strip() for s in data.get("suggestions", []) if s and s.strip()]
+        # 검색 도구를 쓰면 "검색해볼게요" 같은 다른 텍스트 블록이 섞여 나올 수 있어서,
+        # 텍스트 블록들을 순서대로 시도해 JSON으로 읽히는 걸 찾는다 (첫 블록만 믿지 않음).
+        data = None
+        for block in response.content:
+            if block.type != "text" or not block.text.strip():
+                continue
+            try:
+                data = json.loads(block.text)
+                break
+            except (json.JSONDecodeError, ValueError):
+                continue
+        if data is None:
+            return None
+        items = []
+        for s in data.get("suggestions", []):
+            display = (s.get("display") or "").strip()
+            keyword = (s.get("keyword") or "").strip()
+            if display and keyword:
+                items.append({"display": display, "keyword": keyword})
         return items[:3] or None
     except Exception:
         return None  # API 장애/refusal/파싱 실패 등 — 호출부가 폴백
 
 
-async def get_suggestions(lang: str) -> list[str]:
+async def get_suggestions(lang: str) -> list[dict[str, str]]:
     key = f"suggest:{lang}"
     cached = cache_get(short_cache, key)
     if cached is not None:

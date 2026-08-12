@@ -73,6 +73,13 @@ export interface DistrictStampStatus {
   hiddenReady: boolean;
 }
 
+// AI 추천 검색어 — display(화면 표시용 문장) / keyword(탭했을 때 실제 검색에 쓰는 짧은 단어) 분리
+// (문장 그대로 검색하면 TourAPI 키워드 검색에서 0건 나오는 문제 때문 — 2026-08-11)
+export interface SearchSuggestion {
+  display: string;
+  keyword: string;
+}
+
 export const endpoints = {
   guestLogin: (lang: string) =>
     api<{ token: string; user: { id: number; name: string; lang: string } }>(
@@ -167,5 +174,5 @@ export const endpoints = {
 
   // AI(LLM) 추천 검색어/키워드
   searchSuggestions: (lang: string) =>
-    api<{ items: string[] }>(`/api/search/suggest?lang=${lang}`),
+    api<{ items: SearchSuggestion[] }>(`/api/search/suggest?lang=${lang}`),
 };

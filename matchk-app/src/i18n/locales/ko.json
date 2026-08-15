@@ -35,7 +35,12 @@
     "startDate": "시작일 (YYYY-MM-DD)",
     "endDate": "종료일 (YYYY-MM-DD)",
     "chooseDay": "며칠차에 담을까요?",
-    "reorderHint": "▲▼ 순서 변경 · ▶日 다음 날로 이동 · 🗑 삭제"
+    "moveToDay": "며칠차로 옮길까요?",
+    "currentDay": "현재",
+    "reorderHint": "▲▼ 순서 변경 · ▶日 다음 날로 이동 · 🗑 삭제",
+    "dateHint": "YYYYMMDD 또는 YYYY-MM-DD로 입력하세요",
+    "dateFormatError": "날짜 형식이 올바르지 않아요 (예: 2028-08-17)",
+    "dateRangeError": "종료일이 시작일보다 빠를 수 없어요"
   },
   "search": {
     "noResults": "검색 결과가 없어요",
@@ -78,6 +83,7 @@
     "error": "불러오지 못했어요 — 네트워크/서버를 확인해주세요",
     "retry": "다시 시도",
     "close": "닫기",
-    "create": "만들기"
+    "create": "만들기",
+    "cancel": "취소"
   }
 }

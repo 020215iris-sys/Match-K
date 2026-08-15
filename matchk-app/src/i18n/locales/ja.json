@@ -35,7 +35,12 @@
     "startDate": "開始日 (YYYY-MM-DD)",
     "endDate": "終了日 (YYYY-MM-DD)",
     "chooseDay": "何日目に追加しますか？",
-    "reorderHint": "▲▼ 並び替え · ▶日 翌日へ · 🗑 削除"
+    "moveToDay": "何日目に移動しますか？",
+    "currentDay": "現在",
+    "reorderHint": "▲▼ 並び替え · ▶日 翌日へ · 🗑 削除",
+    "dateHint": "YYYYMMDD または YYYY-MM-DD で入力してください",
+    "dateFormatError": "日付の形式が正しくありません（例：2028-08-17）",
+    "dateRangeError": "終了日は開始日より前にできません"
   },
   "search": {
     "noResults": "検索結果がありません",
@@ -78,6 +83,7 @@
     "error": "読み込めませんでした — ネットワーク/サーバーをご確認ください",
     "retry": "再試行",
     "close": "閉じる",
-    "create": "作成"
+    "create": "作成",
+    "cancel": "キャンセル"
   }
 }

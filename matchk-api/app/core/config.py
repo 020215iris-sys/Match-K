@@ -11,13 +11,25 @@ class Settings(BaseSettings):
     TOURAPI_KEY: str = ""
     JWT_SECRET: str = "dev-secret-change-me"
     JWT_EXPIRE_MINUTES: int = 43200
-    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_ID: str = ""       # 웹 클라이언트 (백엔드 콜백/검증용)
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/auth/google/callback"
+    # 모바일 로그인 시 id_token의 aud가 될 수 있는 클라이언트 ID들 (dev build 후 발급).
+    GOOGLE_ANDROID_CLIENT_ID: str = ""
+    GOOGLE_IOS_CLIENT_ID: str = ""
+
+    @property
+    def google_allowed_aud(self) -> set[str]:
+        """모바일 id_token 검증 시 허용할 aud(클라이언트 ID) 집합."""
+        return {c for c in (self.GOOGLE_CLIENT_ID, self.GOOGLE_ANDROID_CLIENT_ID,
+                            self.GOOGLE_IOS_CLIENT_ID) if c}
 
     # Papago 번역 (네이버클라우드) — 외국어판 없는 곳의 폴백 번역. 미설정 시 번역 스킵.
     PAPAGO_CLIENT_ID: str = ""
     PAPAGO_CLIENT_SECRET: str = ""
+
+    # Claude API — 검색 AI 추천어 생성 (search_suggest.py). 미설정 시 고정 샘플로 폴백.
+    ANTHROPIC_API_KEY: str = ""
 
     # 시연 모드 (D4 [B]): true면 요청 body의 mock 좌표 허용. 발표 시 투명하게 공개.
     DEMO_MODE: bool = False

@@ -73,10 +73,22 @@ export interface DistrictStampStatus {
   hiddenReady: boolean;
 }
 
+// AI 추천 검색어 — display(화면 표시용 문장) / keyword(탭했을 때 실제 검색에 쓰는 짧은 단어) 분리
+// (문장 그대로 검색하면 TourAPI 키워드 검색에서 0건 나오는 문제 때문 — 2026-08-11)
+export interface SearchSuggestion {
+  display: string;
+  keyword: string;
+}
+
 export const endpoints = {
   guestLogin: (lang: string) =>
     api<{ token: string; user: { id: number; name: string; lang: string } }>(
       `/auth/guest?lang=${lang}`, { method: 'POST', auth: false }),
+
+  // 구글 로그인 — 앱이 받은 액세스 토큰을 서버가 검증 후 우리 JWT 발급
+  googleLogin: (accessToken: string) =>
+    api<{ token: string; user: { id: number; name: string; lang: string } }>(
+      '/auth/google/mobile', { method: 'POST', auth: false, body: { accessToken } }),
 
   recommendations: (type: 'auto' | 'nearby', lang: string, lat?: number, lng?: number) => {
     const pos = lat != null && lng != null ? `&lat=${lat}&lng=${lng}` : '';
@@ -162,5 +174,5 @@ export const endpoints = {
 
   // AI(LLM) 추천 검색어/키워드
   searchSuggestions: (lang: string) =>
-    api<{ items: string[] }>(`/api/search/suggest?lang=${lang}`),
+    api<{ items: SearchSuggestion[] }>(`/api/search/suggest?lang=${lang}`),
 };

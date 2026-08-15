@@ -20,7 +20,9 @@
       "package": "com.matchk.app",
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
       ]
     },
     "plugins": [
@@ -28,6 +30,11 @@
       "expo-secure-store",
       "expo-localization",
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "2e6935a1-d182-435c-8ea0-d728f09cbe70"
+      }
+    }
   }
 }

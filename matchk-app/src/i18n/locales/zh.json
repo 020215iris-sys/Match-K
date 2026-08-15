@@ -35,7 +35,12 @@
     "startDate": "开始日期 (YYYY-MM-DD)",
     "endDate": "结束日期 (YYYY-MM-DD)",
     "chooseDay": "添加到第几天？",
-    "reorderHint": "▲▼ 排序 · ▶日 移到次日 · 🗑 删除"
+    "moveToDay": "移动到第几天？",
+    "currentDay": "当前",
+    "reorderHint": "▲▼ 排序 · ▶日 移到次日 · 🗑 删除",
+    "dateHint": "请输入 YYYYMMDD 或 YYYY-MM-DD",
+    "dateFormatError": "日期格式不正确（例：2028-08-17）",
+    "dateRangeError": "结束日期不能早于开始日期"
   },
   "search": {
     "noResults": "没有搜索结果",
@@ -78,6 +83,7 @@
     "error": "加载失败 — 请检查网络/服务器",
     "retry": "重试",
     "close": "关闭",
-    "create": "创建"
+    "create": "创建",
+    "cancel": "取消"
   }
 }

@@ -35,7 +35,12 @@
     "startDate": "Start (YYYY-MM-DD)",
     "endDate": "End (YYYY-MM-DD)",
     "chooseDay": "Which day?",
-    "reorderHint": "▲▼ reorder · ▶日 next day · 🗑 delete"
+    "moveToDay": "Move to which day?",
+    "currentDay": "current",
+    "reorderHint": "▲▼ reorder · ▶日 next day · 🗑 delete",
+    "dateHint": "Enter as YYYYMMDD or YYYY-MM-DD",
+    "dateFormatError": "Invalid date format (e.g. 2028-08-17)",
+    "dateRangeError": "End date can't be before the start date"
   },
   "search": {
     "noResults": "No results found",
@@ -78,6 +83,7 @@
     "error": "Couldn't load — check network/server",
     "retry": "Retry",
     "close": "Close",
-    "create": "Create"
+    "create": "Create",
+    "cancel": "Cancel"
   }
 }

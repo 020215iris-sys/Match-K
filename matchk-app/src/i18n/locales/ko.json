@@ -37,10 +37,15 @@
     "chooseDay": "며칠차에 담을까요?",
     "moveToDay": "며칠차로 옮길까요?",
     "currentDay": "현재",
-    "reorderHint": "▲▼ 순서 변경 · ▶日 다음 날로 이동 · 🗑 삭제",
+    "reorderHint": "▲▼ 순서 변경 · 꾹 눌러 다른 날로 이동 · 🗑 삭제",
+    "yearMonthLabel": "{{year}}년 {{month}}월",
+    "monthN": "{{n}}월",
     "dateHint": "YYYYMMDD 또는 YYYY-MM-DD로 입력하세요",
     "dateFormatError": "날짜 형식이 올바르지 않아요 (예: 2028-08-17)",
-    "dateRangeError": "종료일이 시작일보다 빠를 수 없어요"
+    "dateRangeError": "종료일이 시작일보다 빠를 수 없어요",
+    "nameRequiredError": "일정 이름을 입력해주세요",
+    "dateBothRequiredError": "시작일과 종료일을 모두 입력하거나 둘 다 비워두세요",
+    "datePastError": "오늘 이전 날짜는 선택할 수 없어요"
   },
   "search": {
     "noResults": "검색 결과가 없어요",
@@ -84,6 +89,7 @@
     "retry": "다시 시도",
     "close": "닫기",
     "create": "만들기",
-    "cancel": "취소"
+    "cancel": "취소",
+    "done": "완료"
   }
 }

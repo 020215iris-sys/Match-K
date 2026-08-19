@@ -37,10 +37,15 @@
     "chooseDay": "何日目に追加しますか？",
     "moveToDay": "何日目に移動しますか？",
     "currentDay": "現在",
-    "reorderHint": "▲▼ 並び替え · ▶日 翌日へ · 🗑 削除",
+    "reorderHint": "▲▼ 並び替え · 長押しで他の日へ移動 · 🗑 削除",
+    "yearMonthLabel": "{{year}}年{{month}}月",
+    "monthN": "{{n}}月",
     "dateHint": "YYYYMMDD または YYYY-MM-DD で入力してください",
     "dateFormatError": "日付の形式が正しくありません（例：2028-08-17）",
-    "dateRangeError": "終了日は開始日より前にできません"
+    "dateRangeError": "終了日は開始日より前にできません",
+    "nameRequiredError": "旅程名を入力してください",
+    "dateBothRequiredError": "開始日と終了日を両方入力するか、両方空欄にしてください",
+    "datePastError": "今日より前の日付は選択できません"
   },
   "search": {
     "noResults": "検索結果がありません",
@@ -84,6 +89,7 @@
     "retry": "再試行",
     "close": "閉じる",
     "create": "作成",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "done": "完了"
   }
 }

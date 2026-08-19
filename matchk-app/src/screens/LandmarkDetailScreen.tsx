@@ -23,6 +23,9 @@ export default function LandmarkDetailScreen() {
   const [detail, setDetail] = useState<Record<string, string> | null>(null);
   const [translated, setTranslated] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  // 상세 화면발 일정담기에도 구 코드가 필요함(스케줄러 요청, 2026-08-19) — 검색 경로는
+  // TourAPI가 바로 주지만, 상세 경로는 이 상태에 받아뒀다가 addToItinerary에서 실어보낸다.
+  const [sigunguCode, setSigunguCode] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,6 +36,7 @@ export default function LandmarkDetailScreen() {
         setTranslated(res.translated ?? false);
         setCoords(res.stampLat != null && res.stampLng != null
           ? { lat: res.stampLat, lng: res.stampLng } : null);
+        setSigunguCode(res.sigunguCode ?? null);
       })
       .catch(() => setDetail(null))
       .finally(() => setLoading(false));
@@ -46,6 +50,7 @@ export default function LandmarkDetailScreen() {
         title: detail?.title ?? route.params.title,
         lat: coords?.lat ?? null,
         lng: coords?.lng ?? null,
+        sigunguCode,
       },
     });
   };

@@ -105,6 +105,7 @@ export const endpoints = {
 
   landmarkDetail: (contentid: string, lang: string) =>
     api<{ detail: Record<string, string>; stamped: boolean; district: string | null;
+          sigunguCode: number | null;
           availableInYourLanguage?: boolean; translated?: boolean;
           stampLat: number | null; stampLng: number | null }>(
       `/api/landmarks/${contentid}?lang=${lang}`),

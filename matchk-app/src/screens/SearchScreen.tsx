@@ -3,12 +3,12 @@
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { endpoints, TourItem } from '@/api/endpoints';
+import { endpoints, SearchSuggestion, TourItem } from '@/api/endpoints';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
 import { useAppStore } from '@/store/appStore';
@@ -30,24 +30,35 @@ export default function SearchScreen() {
   const [query, setQuery] = useState('');
   const debounced = useDebounce(query, 400);
   const [results, setResults] = useState<TourItem[] | null>(null);
-  const [suggestions, setSuggestions] = useState<string[]>([]);
+  // display(보여줄 문장)/keyword(탭 시 실제 검색어) 분리 — 문장 그대로 검색하면 0건 나오는 문제 때문
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
 
-  // AI(LLM) 추천 검색어/키워드 (TODO 지현: 백엔드 LLM 연결 — 지금은 스텁)
+  // AI(LLM) 추천 검색어/키워드
   useEffect(() => {
     endpoints.searchSuggestions(lang).then((r) => setSuggestions(r.items)).catch(() => setSuggestions([]));
   }, [lang]);
 
+  // display 문구 → keyword 역참조 맵. 검색창엔 display를 그대로 보여주되(사용자가 본 문구랑 동일하게),
+  // 실제 TourAPI 호출은 keyword로 해야 결과가 나옴(문장 그대로면 0건). 사용자가 글자를 고치면
+  // display와 더 이상 정확히 일치하지 않으니 자동으로 "직접 입력" 취급되어 원래 동작으로 돌아감.
+  const suggestionKeywordByDisplay = useMemo(
+    () => new Map(suggestions.map((s) => [s.display, s.keyword])),
+    [suggestions],
+  );
+
   // 실시간 검색 (디바운싱 400ms)
   useEffect(() => {
-    if (!debounced.trim()) {
+    const trimmed = debounced.trim();
+    if (!trimmed) {
       setResults(null);
       return;
     }
+    const searchTerm = suggestionKeywordByDisplay.get(trimmed) ?? trimmed;
     endpoints
-      .search(debounced.trim(), lang)
+      .search(searchTerm, lang)
       .then((r) => setResults(r.items))
       .catch(() => setResults([]));
-  }, [debounced, lang]);
+  }, [debounced, lang, suggestionKeywordByDisplay]);
 
   const onSelect = (item: TourItem) => {
     if (query.trim()) addRecentSearch(query.trim());
@@ -84,9 +95,13 @@ export default function SearchScreen() {
       {results === null ? (
         <View style={styles.suggestWrap}>
           <Text style={styles.suggestTitle}>{t('search.aiSuggest')}</Text>
-          {suggestions.map((s) => (
-            <Pressable key={s} style={styles.suggestRow} onPress={() => setQuery(s)}>
-              <Text style={styles.suggestText}>◇  {s}</Text>
+          {suggestions.map((s, idx) => (
+            <Pressable
+              key={`${s.keyword}-${idx}`}
+              style={styles.suggestRow}
+              onPress={() => setQuery(s.display)}
+            >
+              <Text style={styles.suggestText}>◇  {s.display}</Text>
             </Pressable>
           ))}
 

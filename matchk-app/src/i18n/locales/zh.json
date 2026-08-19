@@ -37,10 +37,15 @@
     "chooseDay": "添加到第几天？",
     "moveToDay": "移动到第几天？",
     "currentDay": "当前",
-    "reorderHint": "▲▼ 排序 · ▶日 移到次日 · 🗑 删除",
+    "reorderHint": "▲▼ 排序 · 长按移动到其他日期 · 🗑 删除",
+    "yearMonthLabel": "{{year}}年{{month}}月",
+    "monthN": "{{n}}月",
     "dateHint": "请输入 YYYYMMDD 或 YYYY-MM-DD",
     "dateFormatError": "日期格式不正确（例：2028-08-17）",
-    "dateRangeError": "结束日期不能早于开始日期"
+    "dateRangeError": "结束日期不能早于开始日期",
+    "nameRequiredError": "请输入行程名称",
+    "dateBothRequiredError": "请同时填写开始和结束日期，或都留空",
+    "datePastError": "不能选择今天之前的日期"
   },
   "search": {
     "noResults": "没有搜索结果",
@@ -84,6 +89,7 @@
     "retry": "重试",
     "close": "关闭",
     "create": "创建",
-    "cancel": "取消"
+    "cancel": "取消",
+    "done": "完成"
   }
 }

@@ -3,14 +3,18 @@
  *  · 항목 재정렬(▲▼)·삭제(🗑) — 실제 드래그앤드랍은 TODO(다은, 라이브러리 필요).
  *  · 2026-08-15 수정: chooseDay/reorder/remove 에러 핸들링 추가
  *    (실패 시 무피드백으로 넘어가던 문제 — Alert + 상태 유지/재동기화로 수정)
- *  · 2026-08-15 추가: 백엔드에 dayIndex 범위 검증(400)이 추가됨에 따라,
- *    chooseDay는 서버 detail 메시지를 그대로 보여주도록 보강 (alertFromError)
- *  · 2026-08-15 재수정 (QA 피드백):
- *    - "다음 날로 이동(▶日)" 버튼 제거 → 항목을 꾹 눌러(길게 누르기) 이동할 일차를 고르는
- *      모달로 교체. 다음 날뿐 아니라 이전 날로도 자유롭게 이동 가능해짐.
- *    - 헤더 뒤로가기를 커스터마이즈해서 항상 스케줄러 메인으로 이동하도록 수정
- *      (기존엔 default goBack이라 진입 경로에 따라 엉뚱한 화면으로 돌아가는 문제가 있었음).
- *    - 하단 "장소추가" 버튼이 제스처 내비게이션 바와 겹치는 문제 — safe area insets 반영. */
+ *  · 백엔드에 dayIndex 범위 검증(400)이 추가됨에 따라 chooseDay는 서버 detail 메시지를
+ *    그대로 보여주도록 보강 (alertFromError)
+ *  · 뒤로가기를 항상 스케줄러 메인으로 커스텀. 하단 버튼 safe area 반영.
+ *  · 항목 길게 누르면 이동할 일차를 고르는 모달 (전날/다음날 자유롭게 이동 가능)
+ *
+ *  ⚠️ 2026-08-15 롤백: react-native-draggable-flatlist 기반 실제 드래그앤드롭을
+ *     시도했으나 reanimated 4.1.1 ↔ draggable-flatlist 4.0.3 버전 충돌로 Expo Go에서
+ *     크래시(NativeWorklets/installTurboModule 에러) 발생. 팀 공유 일정상 우선 이 버전
+ *     (롱프레스 모달 방식)으로 롤백. 드래그앤드롭은 reanimated 버전 고정 등 별도 해결 후
+ *     재시도 예정 — react-native-draggable-flatlist, react-native-gesture-handler,
+ *     react-native-reanimated 의존성은 package.json에 남아있어도 이 파일에서는 사용 안 함.
+ */
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -53,8 +57,7 @@ export default function ItineraryDetailScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  // 뒤로가기는 항상 스케줄러 메인으로 — 진입 경로(홈발/검색발 등)와 무관하게 동일한 목적지 보장.
-  // 스택에 SchedulerMain이 이미 있으면 그리로 pop, 없으면 새로 push (둘 다 자연스러움).
+  // 뒤로가기는 항상 스케줄러 메인으로 — 진입 경로와 무관하게 동일한 목적지 보장.
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
@@ -72,8 +75,7 @@ export default function ItineraryDetailScreen() {
   const itemsByDay = (day: number): ItineraryItem[] =>
     data.items.filter((x) => x.dayIndex === day).sort((a, b) => a.sortOrder - b.sortOrder);
 
-  // addPlace 일차 선택
-  // 실패 시: 알림 표시 + 모달 유지(재시도 가능하도록 setParams 호출 안 함)
+  // addPlace 일차 선택 (신규 항목 추가)
   const chooseDay = async (day: number) => {
     if (!addPlace) return;
     try {
@@ -90,8 +92,7 @@ export default function ItineraryDetailScreen() {
   };
   const cancelAdd = () => navigation.setParams({ addPlace: undefined });
 
-  // 재정렬(같은 일차 내 순서) — 드래그 대체 (실제 DnD는 TODO 다은)
-  // PATCH 두 번 중 하나만 실패해도 순서가 꼬일 수 있어 실패 시 load()로 서버 상태 강제 재동기화
+  // 재정렬(같은 일차 내 순서)
   const reorder = async (item: ItineraryItem, dir: 'up' | 'down') => {
     const list = itemsByDay(item.dayIndex);
     const idx = list.findIndex((x) => x.id === item.id);
@@ -108,7 +109,7 @@ export default function ItineraryDetailScreen() {
     }
   };
 
-  // 항목을 다른 일차로 이동 — 길게 누르면 열리는 모달에서 원하는 일차를 고름 (이전/다음 자유)
+  // 항목을 다른 일차로 이동 — 길게 누르면 열리는 모달에서 원하는 일차를 고름
   const openMoveModal = (item: ItineraryItem) => setMovingItem(item);
   const closeMoveModal = () => setMovingItem(null);
   const moveToDay = async (day: number) => {
@@ -190,7 +191,7 @@ export default function ItineraryDetailScreen() {
         </Pressable>
       </Modal>
 
-      {/* 일차 이동 모달 (항목 길게 누르면 오픈) — 현재 일차는 옅게 표시, 다른 일차 탭하면 이동 */}
+      {/* 일차 이동 모달 (항목 길게 누르면 오픈) */}
       <Modal transparent visible={!!movingItem} animationType="fade" onRequestClose={closeMoveModal}>
         <Pressable style={styles.backdrop} onPress={closeMoveModal}>
           <View style={styles.sheet}>

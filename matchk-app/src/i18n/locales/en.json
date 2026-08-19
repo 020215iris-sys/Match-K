@@ -37,10 +37,15 @@
     "chooseDay": "Which day?",
     "moveToDay": "Move to which day?",
     "currentDay": "current",
-    "reorderHint": "▲▼ reorder · ▶日 next day · 🗑 delete",
+    "reorderHint": "▲▼ reorder · Long-press to move to another day · 🗑 delete",
+    "yearMonthLabel": "{{month}}/{{year}}",
+    "monthN": "{{n}}",
     "dateHint": "Enter as YYYYMMDD or YYYY-MM-DD",
     "dateFormatError": "Invalid date format (e.g. 2028-08-17)",
-    "dateRangeError": "End date can't be before the start date"
+    "dateRangeError": "End date can't be before the start date",
+    "nameRequiredError": "Please enter an itinerary name",
+    "dateBothRequiredError": "Enter both start and end dates, or leave both blank",
+    "datePastError": "You can't select a date before today"
   },
   "search": {
     "noResults": "No results found",
@@ -84,6 +89,7 @@
     "retry": "Retry",
     "close": "Close",
     "create": "Create",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "done": "Done"
   }
 }

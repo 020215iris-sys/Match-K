@@ -23,11 +23,15 @@
  *  · 2026-08-15 추가: 오늘 이전 날짜는 선택 불가(minDate) + 년도 선택 범위를 오늘 연도~2099년으로.
  *    달력에서는 minDate로 과거 날짜 탭 자체가 막히고, 직접 타이핑 경로는 create() 제출 시
  *    별도로 오늘 이전인지 검증(datePastError).
+ *  · 2026-08-20 버그 수정 (팀원 제보): 일정 생성 폼(creating=true)이 열린 상태에서 헤더
+ *    뒤로가기를 누르면 폼만 닫혀야 하는데 앱 홈까지 나가버리던 문제. 기본 goBack()이
+ *    creating 상태와 무관하게 무조건 스택을 pop해서 생긴 것 — creating 중엔 뒤로가기가
+ *    폼을 닫기만(취소와 동일) 하도록 headerLeft 커스텀.
  */
 import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useLayoutEffect, useMemo, useState } from 'react';
 import {
   Alert,
   FlatList,
@@ -95,6 +99,21 @@ export default function SchedulerMainScreen() {
   const [name, setName] = useState('');
   const [start, setStart] = useState('');
   const [end, setEnd] = useState('');
+
+  // 생성 폼이 열려있을 땐 헤더 뒤로가기가 화면을 나가지 않고 폼만 닫도록(취소와 동일) 커스텀.
+  // 기본 goBack()은 creating 여부와 무관하게 무조건 스택을 pop해서, 폼 작성 중 실수로
+  // 앱 홈까지 나가버리는 문제가 있었음(팀원 제보).
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerLeft: creating
+        ? () => (
+            <Pressable onPress={() => setCreating(false)} hitSlop={10}>
+              <Text style={styles.headerBack}>←</Text>
+            </Pressable>
+          )
+        : undefined, // 목록 화면에서는 기본 뒤로가기(goBack) 그대로 사용
+    });
+  }, [navigation, creating]);
 
   // 달력 인라인 팝업 상태 — 어떤 필드(start/end)를 위해 펼쳐져 있는지, 어느 년/월을 보고 있는지,
   // 날짜 그리드인지 년/월 선택 그리드인지.
@@ -381,6 +400,7 @@ export default function SchedulerMainScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  headerBack: { fontSize: 22, color: colors.primary, paddingHorizontal: 8 },
   banner: {
     backgroundColor: colors.surface,
     color: colors.primary,

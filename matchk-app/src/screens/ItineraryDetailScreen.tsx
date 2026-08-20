@@ -57,11 +57,23 @@ export default function ItineraryDetailScreen() {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  // 뒤로가기는 항상 스케줄러 메인으로 — 진입 경로와 무관하게 동일한 목적지 보장.
+  // 뒤로가기는 스케줄러 메인으로 — 단, navigate()로 매번 이동하면 스택이 계속 쌓이거나
+  // 같은 두 화면을 오가며 goBack으로만 빠져나올 수 있는 상태가 됨(실제 발생한 버그).
+  // 정상 진입 경로(스케줄러 → 일정상세)라면 그냥 goBack()이 스케줄러로 돌아가는 것과 동일하므로
+  // goBack()을 우선 사용하고, 스택에 뒤로 갈 곳이 없는 예외적인 경우에만 navigate로 폴백.
   useLayoutEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
-        <Pressable onPress={() => navigation.navigate('SchedulerMain', {})} hitSlop={10}>
+        <Pressable
+          onPress={() => {
+            if (navigation.canGoBack()) {
+              navigation.goBack();
+            } else {
+              navigation.navigate('SchedulerMain', {});
+            }
+          }}
+          hitSlop={10}
+        >
           <Text style={styles.headerBack}>←</Text>
         </Pressable>
       ),

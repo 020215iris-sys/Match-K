@@ -134,10 +134,16 @@ async def landmark_detail(contentid: str, lang: str = "en", db: Session = Depend
     if user and ref:
         stamped = db.query(Stamp).filter(Stamp.user_id == user.id, Stamp.landmark_id == ref.id).first() is not None
     district_name = None
+    sigungu_code = None
     if ref:
         d = db.get(District, ref.district_id)
         district_name = d.name_en if d else None
+        # 상세 화면에서 일정에 담을 때도 sigunguCode가 필요함(스케줄러 다은 요청, 2026-08-19).
+        # 검색 경로(search.py)는 TourAPI가 직접 sigungucode를 주지만, 상세 경로는 DB의
+        # District FK를 거쳐야 숫자 코드를 얻을 수 있어서 여기서 조인해서 내려줌.
+        sigungu_code = d.sigungu_code if d else None
     return {"detail": detail, "stamped": stamped, "district": district_name,
+            "sigunguCode": sigungu_code,
             "landmarkId": ref.id if ref else None,
             "availableInYourLanguage": localized,
             "translated": translated,  # true면 앱에서 '자동 번역됨' 라벨 표시

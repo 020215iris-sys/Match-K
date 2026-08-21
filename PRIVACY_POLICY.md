@@ -4,7 +4,7 @@
 > (구글 플레이 데이터 안전 양식 + 계정삭제 요건). 게시 전 [연락처] 등 대괄호 항목을 채울 것.
 > 최종 검토는 필요 시 전문가 확인 권장 (본 문서는 초안).
 
-시행일: 2026-__-__
+시행일: 2026-08-21
 
 ---
 
@@ -37,7 +37,7 @@
 서비스는 만 14세 미만 아동을 대상으로 하지 않으며, 해당 아동의 개인정보를 알면서 수집하지 않습니다.
 
 ### 7. 연락처
-- 이메일: [담당자 이메일 입력]
+- 이메일: twinking3594@gmail.com
 - 문의 시 신속히 답변드립니다.
 
 ---
@@ -71,4 +71,4 @@ You may request access, correction, or deletion of your data through in-app feat
 The Service is not directed to children under 14 and does not knowingly collect their personal data.
 
 ### 7. Contact
-- Email: [enter contact email]
+- Email: twinking3594@gmail.com

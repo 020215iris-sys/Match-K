@@ -20,8 +20,8 @@ const LANGS: { code: AppLang; label: string }[] = [
   { code: 'zh', label: '中文' },
 ];
 
-// 웹에 게시한 개인정보처리방침 URL로 교체 (스토어 등록 URL과 동일하게)
-const PRIVACY_POLICY_URL = 'https://matchk.example.com/privacy';
+// 스토어 등록 URL과 동일하게 유지 (GitHub 파일 뷰 — public repo라 별도 호스팅 불필요)
+const PRIVACY_POLICY_URL = 'https://github.com/020215iris-sys/Match-K/blob/main/PRIVACY_POLICY.md';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();

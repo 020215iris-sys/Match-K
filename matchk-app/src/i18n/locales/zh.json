@@ -37,7 +37,7 @@
     "chooseDay": "添加到第几天？",
     "moveToDay": "移动到第几天？",
     "currentDay": "当前",
-    "reorderHint": "▲▼ 排序 · 长按移动到其他日期 · 🗑 删除",
+    "reorderHint": "按住 ⠿ 手柄拖动可自由调整顺序或移动到其他日期 · 🗑 删除",
     "yearMonthLabel": "{{year}}年{{month}}月",
     "monthN": "{{n}}月",
     "dateHint": "请输入 YYYYMMDD 或 YYYY-MM-DD",

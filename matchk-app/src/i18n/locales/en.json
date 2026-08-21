@@ -37,7 +37,7 @@
     "chooseDay": "Which day?",
     "moveToDay": "Move to which day?",
     "currentDay": "current",
-    "reorderHint": "▲▼ reorder · Long-press to move to another day · 🗑 delete",
+    "reorderHint": "Press and drag the ⠿ handle to reorder or move to another day · 🗑 delete",
     "yearMonthLabel": "{{month}}/{{year}}",
     "monthN": "{{n}}",
     "dateHint": "Enter as YYYYMMDD or YYYY-MM-DD",

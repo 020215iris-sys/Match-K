@@ -37,7 +37,7 @@
     "chooseDay": "何日目に追加しますか？",
     "moveToDay": "何日目に移動しますか？",
     "currentDay": "現在",
-    "reorderHint": "▲▼ 並び替え · 長押しで他の日へ移動 · 🗑 削除",
+    "reorderHint": "⠿ ハンドルを押してドラッグすると順序や日付を自由に移動できます · 🗑 削除",
     "yearMonthLabel": "{{year}}年{{month}}月",
     "monthN": "{{n}}月",
     "dateHint": "YYYYMMDD または YYYY-MM-DD で入力してください",

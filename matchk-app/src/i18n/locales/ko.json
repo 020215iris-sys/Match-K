@@ -37,7 +37,7 @@
     "chooseDay": "며칠차에 담을까요?",
     "moveToDay": "며칠차로 옮길까요?",
     "currentDay": "현재",
-    "reorderHint": "▲▼ 순서 변경 · 꾹 눌러 다른 날로 이동 · 🗑 삭제",
+    "reorderHint": "⠿ 손잡이를 꾹 눌러 끌면 순서·날짜를 자유롭게 옮길 수 있어요 · 🗑 삭제",
     "yearMonthLabel": "{{year}}년 {{month}}월",
     "monthN": "{{n}}월",
     "dateHint": "YYYYMMDD 또는 YYYY-MM-DD로 입력하세요",

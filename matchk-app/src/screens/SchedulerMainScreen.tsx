@@ -70,6 +70,13 @@ function normalizeDateInput(raw: string): string {
   return trimmed;
 }
 
+/** 날짜 입력창에 숫자·하이픈 외 문자가 들어오지 못하게 타이핑 즉시 걸러냄.
+ *  keyboardType 힌트만으로는 키보드 전환/붙여넣기로 다른 문자가 들어올 수 있어서
+ *  실제 입력값 자체를 제한 (팀원 QA 피드백 — 2026-08-21). */
+function filterDateChars(raw: string): string {
+  return raw.replace(/[^0-9-]/g, '');
+}
+
 function toISODate(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
@@ -101,17 +108,25 @@ export default function SchedulerMainScreen() {
   const [end, setEnd] = useState('');
 
   // 생성 폼이 열려있을 땐 헤더 뒤로가기가 화면을 나가지 않고 폼만 닫도록(취소와 동일) 커스텀.
-  // 기본 goBack()은 creating 여부와 무관하게 무조건 스택을 pop해서, 폼 작성 중 실수로
-  // 앱 홈까지 나가버리는 문제가 있었음(팀원 제보).
+  // 폼이 안 열려있을 땐(목록 화면) 기본 goBack() 대신 항상 홈으로 reset — 진입 경로에 따라
+  // (예: 랜드마크 상세 → 스케줄러로 들어온 경우) goBack이 엉뚱한 중간 화면으로 튀는 문제가
+  // 있어서, 진입 경로와 무관하게 "홈 → 스케줄러 리스트"만 남도록 스택을 강제 정리(QA, 2026-08-21).
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerLeft: creating
-        ? () => (
-            <Pressable onPress={() => setCreating(false)} hitSlop={10}>
-              <Text style={styles.headerBack}>←</Text>
-            </Pressable>
-          )
-        : undefined, // 목록 화면에서는 기본 뒤로가기(goBack) 그대로 사용
+      headerLeft: () => (
+        <Pressable
+          onPress={() => {
+            if (creating) {
+              setCreating(false);
+              return;
+            }
+            navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+          }}
+          hitSlop={10}
+        >
+          <Text style={styles.headerBack}>←</Text>
+        </Pressable>
+      ),
     });
   }, [navigation, creating]);
 
@@ -268,7 +283,7 @@ export default function SchedulerMainScreen() {
               placeholder={t('scheduler.startDate')}
               placeholderTextColor={colors.textSecondary}
               value={start}
-              onChangeText={setStart}
+              onChangeText={(v) => setStart(filterDateChars(v))}
               onFocus={() => openField('start')}
               autoCapitalize="none"
               keyboardType="numbers-and-punctuation"
@@ -278,7 +293,7 @@ export default function SchedulerMainScreen() {
               placeholder={t('scheduler.endDate')}
               placeholderTextColor={colors.textSecondary}
               value={end}
-              onChangeText={setEnd}
+              onChangeText={(v) => setEnd(filterDateChars(v))}
               onFocus={() => openField('end')}
               autoCapitalize="none"
               keyboardType="numbers-and-punctuation"

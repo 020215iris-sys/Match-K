@@ -22,13 +22,13 @@
 
 카테고리 3개는 예시일 뿐, 나중에 바뀔 수 있음 — _CATEGORY_HINT만 고치면 됨.
 """
-import asyncio
 import json
 import random
-from datetime import date
 
-from app.core.cache import cache_get, cache_set, short_cache
+from sqlalchemy.orm import Session
+
 from app.core.config import get_settings
+from app.models import SearchSuggestionCache
 from app.services import tourapi_client
 
 settings = get_settings()
@@ -183,16 +183,13 @@ def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> l
         return None  # API 장애/refusal/파싱 실패 등 — 호출부가 폴백
 
 
-async def get_suggestions(lang: str) -> list[dict[str, str]]:
-    key = f"suggest:{lang}"
-    cached = cache_get(short_cache, key)
-    if cached is not None:
-        return cached
+def get_suggestions(lang: str, db: Session) -> list[dict[str, str]]:
+    """DB 캐시(search_suggestion_cache)에서 읽기만 함 — Claude 호출 없음 (2026-08-23 개편).
 
-    samples = await _category_samples()
-    month = date.today().month
-    items = await asyncio.to_thread(_call_claude_sync, lang, month, samples)
-    result = items if items else FALLBACK_SAMPLES.get(lang, FALLBACK_SAMPLES["en"])
-
-    cache_set(short_cache, key, result)
-    return result
+    실제 생성은 배치 스크립트(scripts/generate_search_suggestions.py)가 한 달에 한 번
+    정도 미리 해두고, 여기는 그 결과를 조회만 한다. 아직 한 번도 안 돌렸거나 그 언어가
+    없으면 FALLBACK_SAMPLES로 대체."""
+    row = db.query(SearchSuggestionCache).filter_by(lang=lang).first()
+    if row is not None:
+        return row.items
+    return FALLBACK_SAMPLES.get(lang, FALLBACK_SAMPLES["en"])

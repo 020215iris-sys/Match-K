@@ -1,6 +1,8 @@
 """검색 API (D6 [B]) — 실시간 TourAPI 키워드 검색, 결과 없으면 근처 추천 병행."""
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
+from app.core.database import get_db
 from app.services import search_suggest, tourapi_client
 
 router = APIRouter(prefix="/api/search", tags=["search"])
@@ -41,11 +43,11 @@ async def search(q: str, lang: str = "en", lat: float | None = None, lng: float 
 
 
 @router.get("/suggest")
-async def suggest(lang: str = "en"):
-    """AI(LLM) 추천 검색어/키워드 (D6 [C] 후속, 2026-07-31 개편).
+def suggest(lang: str = "en", db: Session = Depends(get_db)):
+    """AI(LLM) 추천 검색어/키워드 (D6 [C] 후속, 2026-08-23 DB 캐싱 개편).
 
-    소멸위험 구(동/서/영도) 실제 관광지를 근거로 Claude가 언어권별 추천 검색어 2~3개 생성.
-    키 없거나 호출 실패 시 고정 샘플로 폴백 (search_suggest.py 참고).
+    Claude 호출은 배치 스크립트가 미리 해두고, 여기선 DB에서 읽기만 함
+    (요청 경로에 Claude 호출 없음 — search_suggest.py 참고).
     """
-    items = await search_suggest.get_suggestions(lang)
+    items = search_suggest.get_suggestions(lang, db)
     return {"items": items}

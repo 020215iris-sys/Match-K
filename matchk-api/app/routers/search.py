@@ -1,9 +1,9 @@
 """검색 API (D6 [B]) — 실시간 TourAPI 키워드 검색, 결과 없으면 근처 추천 병행."""
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.services import search_suggest, tourapi_client
+from app.services import category_dictionary, recommender, search_suggest, tourapi_client
 
 router = APIRouter(prefix="/api/search", tags=["search"])
 
@@ -36,10 +36,33 @@ async def search(q: str, lang: str = "en", lat: float | None = None, lng: float 
     items = await tourapi_client.search_by_keyword(lang, q)
     items = _rank_results(items, q)
     fallback = []
+    category_hints: list[str] = []
     if not items:
         flat, flng = (lat, lng) if lat is not None and lng is not None else BUSAN_CENTER
         fallback = await tourapi_client.location_based(lang, flat, flng)
-    return {"items": items, "count": len(items), "fallbackNearby": fallback}
+        # 문장 검색 0건 → 카테고리 칩 제안 (2026-08-23, "카테고리 칩 + 역추천" 제안).
+        # 0건일 때만 계산 — 이름 검색이 성공하는 대부분의 요청은 이 비용이 아예 안 듦.
+        category_hints = category_dictionary.extract_categories(q, lang)
+    return {"items": items, "count": len(items), "fallbackNearby": fallback,
+            "categoryHints": category_hints}
+
+
+@router.get("/category")
+async def search_by_category(category: str, lang: str = "en", db: Session = Depends(get_db)):
+    """카테고리 칩 탭 시 결과 — TourAPI 실시간 검색 + 역추천 점수 재사용 (새봄의
+    recommender.score_and_rank, 2026-08-19 분리) 그대로 씀. apply_quota=True로
+    소멸위험 구를 항상 우선 노출 (공모전 취지 반영 — 검색에도 컨셉이 묻어나게)."""
+    cat = category_dictionary.CATEGORIES.get(category)
+    if cat is None:
+        raise HTTPException(404, "unknown_category")
+    keyword = cat["keyword"].get(lang, cat["keyword"]["en"])
+    raw = await tourapi_client.search_by_keyword(lang, keyword, rows=30)
+    candidates = recommender.candidates_from_raw(raw)
+    items = await recommender.score_and_rank(
+        db, raw, candidates, user_lang=lang, rec_type="search",
+        apply_quota=True, limit=20,
+    )
+    return {"items": items, "count": len(items), "category": category}
 
 
 @router.get("/suggest")

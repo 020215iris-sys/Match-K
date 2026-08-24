@@ -51,7 +51,16 @@
     "noResults": "没有搜索结果",
     "nearbyInstead": "附近推荐",
     "aiSuggest": "AI推荐搜索",
-    "recent": "最近搜索"
+    "recent": "最近搜索",
+    "categoryHint": "这些怎么样？",
+    "category": {
+      "beach": "海水浴场",
+      "park": "公园",
+      "market": "传统市场",
+      "cafe": "咖啡厅",
+      "viewpoint": "观景台",
+      "temple": "寺庙"
+    }
   },
   "hidden": {
     "encounterTitle": "发现隐藏景点！",

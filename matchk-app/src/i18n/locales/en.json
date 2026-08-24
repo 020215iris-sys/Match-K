@@ -51,7 +51,16 @@
     "noResults": "No results found",
     "nearbyInstead": "Recommended nearby",
     "aiSuggest": "AI suggested searches",
-    "recent": "Recent searches"
+    "recent": "Recent searches",
+    "categoryHint": "How about these?",
+    "category": {
+      "beach": "Beach",
+      "park": "Park",
+      "market": "Traditional market",
+      "cafe": "Cafe",
+      "viewpoint": "Viewpoint",
+      "temple": "Temple"
+    }
   },
   "hidden": {
     "encounterTitle": "Hidden spot found!",

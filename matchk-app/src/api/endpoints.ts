@@ -96,8 +96,13 @@ export const endpoints = {
   },
 
   search: (q: string, lang: string) =>
-    api<{ items: TourItem[]; fallbackNearby: TourItem[] }>(
+    api<{ items: TourItem[]; fallbackNearby: TourItem[]; categoryHints: string[] }>(
       `/api/search?q=${encodeURIComponent(q)}&lang=${lang}`),
+
+  // 카테고리 칩 탭 시(문장 검색 0건일 때 제안됨) — 역추천 점수 적용된 결과라 Recommendation 타입 재사용
+  searchByCategory: (category: string, lang: string) =>
+    api<{ items: Recommendation[]; count: number; category: string }>(
+      `/api/search/category?category=${category}&lang=${lang}`),
 
   landmarksByDistrict: (district: number, lang: string, type?: number) =>
     api<{ items: TourItem[]; count: number }>(

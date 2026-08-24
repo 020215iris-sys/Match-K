@@ -92,8 +92,9 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
-      {/* 역추천의 얼굴 (GPS 근처 추천) */}
-      <Mascot recType="nearby" lat={location?.lat} lng={location?.lng} />
+      {/* 역추천의 얼굴 (GPS 근처 추천). GPS 없으면 카드와 동일하게 부산 중심 좌표로 대체
+          (기존엔 fallback 없이 undefined가 그대로 넘어가 GPS 미확보 시 조용히 숨어버렸음). */}
+      <Mascot recType="nearby" lat={(location ?? BUSAN_CENTER).lat} lng={(location ?? BUSAN_CENTER).lng} />
     </SafeAreaView>
   );
 }

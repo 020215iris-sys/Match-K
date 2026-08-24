@@ -1,5 +1,8 @@
 /** 프로필/설정 — 언어 변경 / 구글 로그인 / 로그아웃 / 회원탈퇴 */
-import { GoogleSignin, isSuccessResponse } from '@react-native-google-signin/google-signin';
+// ⚠️ @react-native-google-signin/google-signin은 최상단에서 정적 import하면 안 됨 —
+// Expo Go엔 이 네이티브 모듈이 없어서, RootNavigator가 이 화면을 참조하는 순간
+// 앱 전체가 부팅 시 크래시남 (2026-08-24, 현표님 리포트). 로그인 시도할 때만
+// 동적 import해서 dev build/프로덕션 빌드에서만 로드되게 함.
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect } from 'react';
 import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
@@ -30,15 +33,20 @@ export default function ProfileScreen() {
   // standalone 빌드에서 앱으로 복귀가 안 되는 문제가 있어 2026-08-24 교체).
   // 액세스 토큰 방식: 설치형 앱은 id_token만으론 서버 userinfo 조회가 안 돼서 accessToken 사용.
   useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-      offlineAccess: false,
-    });
+    import('@react-native-google-signin/google-signin')
+      .then(({ GoogleSignin }) => {
+        GoogleSignin.configure({
+          webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+          iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+          offlineAccess: false,
+        });
+      })
+      .catch(() => {}); // Expo Go 등 네이티브 모듈 없는 환경 — 조용히 스킵
   }, []);
 
   const handleGoogleLogin = async () => {
     try {
+      const { GoogleSignin, isSuccessResponse } = await import('@react-native-google-signin/google-signin');
       await GoogleSignin.hasPlayServices();
       const response = await GoogleSignin.signIn();
       if (!isSuccessResponse(response)) return; // 사용자가 취소함 — 조용히 무시
@@ -46,6 +54,7 @@ export default function ProfileScreen() {
       await loginWithGoogle(accessToken);
       Alert.alert('✓', t('profile.loginGoogle'));
     } catch {
+      // Expo Go(네이티브 모듈 없음)면 여기로 옴 — dev build 필요 안내로 오해 안 하게 일반 에러로 표시
       Alert.alert(t('common.error'));
     }
   };

@@ -85,6 +85,7 @@
     "logout": "ログアウト",
     "guest": "ゲストとして続ける",
     "loginGoogle": "Googleでログイン",
+    "devBuildRequired": "この機能はインストールされたアプリでのみ利用できます",
     "deleteTitle": "退会",
     "deleteWarning": "アカウントとすべてのスタンプ記録が完全に削除されます。元に戻せません。本当に退会しますか？",
     "deleteConfirm": "退会する",

@@ -85,6 +85,7 @@
     "logout": "退出登录",
     "guest": "以访客身份继续",
     "loginGoogle": "使用 Google 登录",
+    "devBuildRequired": "此功能仅在已安装的应用中可用",
     "deleteTitle": "注销账户",
     "deleteWarning": "您的账户和所有印章记录将被永久删除，且无法恢复。确定要注销吗？",
     "deleteConfirm": "注销",

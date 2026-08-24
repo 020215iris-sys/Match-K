@@ -85,6 +85,7 @@
     "logout": "Log out",
     "guest": "Continue as guest",
     "loginGoogle": "Sign in with Google",
+    "devBuildRequired": "This feature is only available in the installed app, not this preview",
     "deleteTitle": "Delete account",
     "deleteWarning": "Your account and all stamp records will be permanently deleted. This cannot be undone. Delete anyway?",
     "deleteConfirm": "Delete",

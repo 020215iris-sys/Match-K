@@ -7,7 +7,6 @@
   지어낼 수 있어서, 관광지·음식점·카페 각각 실제 TourAPI 데이터 몇 개를 참고자료로 줌.
 - 키 없거나(ANTHROPIC_API_KEY 미설정) 호출 실패 시 고정 샘플로 폴백
   (translator.py와 동일한 그레이스풀 디그레이드 패턴).
-- 결과는 5분 캐시 (같은 언어권 반복 호출 절약).
 
 ⚠️ 웹 검색 도구 사용 (2026-08-11, 팀 논의 후 결정): 계절 추천(1번 카테고리)은 TourAPI에
 "이번 달 인기" 같은 데이터가 없어서, Claude의 web_search 도구를 켜서 실제 최신 정보
@@ -20,10 +19,19 @@
 짧은 핵심단어"(keyword)를 분리해서 함께 생성한다. 프론트는 display를 보여주고,
 탭하면 keyword로 검색한다 (SearchScreen.tsx, endpoints.ts도 같이 수정 필요).
 
-카테고리 3개는 예시일 뿐, 나중에 바뀔 수 있음 — _CATEGORY_HINT만 고치면 됨.
+⚠️ DB 캐싱으로 개편 (2026-08-23): 이 파일 안의 _call_claude_sync() / _category_samples()는
+더 이상 사용자 요청 경로(get_suggestions)에서 안 불림 — 배치 스크립트
+(scripts/generate_search_suggestions.py)가 한 달에 한 번 정도 이 둘을 미리 호출해서
+search_suggestion_cache 테이블에 언어별로 저장해두고, get_suggestions()는 그 DB를 읽기만
+한다. 그래서 이 파일 안에서는 두 함수가 "안 쓰이는 것처럼" 보이지만(IDE도 그렇게 표시함),
+배치 스크립트가 이 파일에서 import해서 쓰고 있으니 지우면 안 됨.
+
+카테고리 3개는 예시일 뿐, 나중에 바뀔 수 있음 — _call_claude_sync() 안의 프롬프트
+문구를 고치면 됨.
 """
 import json
 import random
+from datetime import date
 
 from sqlalchemy.orm import Session
 
@@ -61,6 +69,15 @@ FALLBACK_SAMPLES = {
 }
 
 _LANG_NAME = {"ko": "Korean", "en": "English", "ja": "Japanese", "zh": "Simplified Chinese"}
+
+# 9·10월(가을철) 계절 추천은 키워드를 Claude 자유선택이 아니라 고정함 (2026-08-24).
+# 실제 TourAPI에 던져서 검증한 결과 — "공원"은 음식점 오탐(공원집·공원칼국수) 섞이고,
+# "태종대"/"이기대"/"용두산공원"은 등록 제목이 달라서 0건/엉뚱한 결과가 나옴.
+# "전망대"는 가짜매칭 없고 황령산전망대 등 실제 유명한 곳이 걸려서 이걸로 고정.
+_SEASONAL_KEYWORD: dict[int, dict[str, str]] = {
+    9: {"ko": "전망대", "en": "observatory", "ja": "展望台", "zh": "观景台"},
+    10: {"ko": "전망대", "en": "observatory", "ja": "展望台", "zh": "观景台"},
+}
 
 _SUGGEST_SCHEMA = {
     "type": "object",
@@ -122,6 +139,29 @@ def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> l
     def _fmt(key: str) -> str:
         return ", ".join(samples.get(key) or []) or "(no sample data)"
 
+    # 9·10월은 keyword를 고정해서 Claude한테 넘김 (실데이터로 검증된 안전한 단어만 쓰게).
+    # 그 외 달은 기존처럼 Claude가 실제 관광지 샘플을 참고해서 자유롭게 keyword까지 고름.
+    forced_keyword = _SEASONAL_KEYWORD.get(month, {}).get(lang)
+    if forced_keyword:
+        item1 = (
+            f"1. A seasonal travel-spot suggestion for the current month (month {month} of the year) "
+            f"in Busan. The \"keyword\" MUST be exactly \"{forced_keyword}\" (already verified against "
+            f"real place titles — do not change or translate it further). You have a web_search tool — "
+            f"use it (a couple of searches at most) to check the current/typical weather and what's "
+            f"seasonally trending in Busan right now, so the \"display\" text about {forced_keyword} "
+            f"spots feels genuinely timely, not generic. Real attraction names for reference: "
+            f"{_fmt('attraction')}.\n"
+        )
+    else:
+        item1 = (
+            f"1. A seasonal travel-spot suggestion for the current month (month {month} of the year) "
+            f"in Busan. You have a web_search tool — use it (a couple of searches at most) to check "
+            f"the current/typical weather and what's seasonally trending in Busan right now, so the "
+            f"display text is genuinely timely, not just generic. For keyword, still pick a short "
+            f"literal place-name term (not a weather description). Real attraction names for reference: "
+            f"{_fmt('attraction')}.\n"
+        )
+
     prompt = (
         "You write search-suggestion chips for a Busan (South Korea) tourism app's "
         "search screen (shown before the user types anything). Write exactly 3 suggestions "
@@ -133,12 +173,7 @@ def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> l
         "AS-IS against place-title text — it must be a term likely to appear literally inside a "
         "real place name/title (e.g. a place name, a food/venue type like '국밥' or '카페'), "
         "NOT a sentence, NOT a description, NOT the same text as display.\n"
-        f"1. A seasonal travel-spot suggestion for the current month (month {month} of the year) "
-        f"in Busan. You have a web_search tool — use it (a couple of searches at most) to check "
-        f"the current/typical weather and what's seasonally trending in Busan right now, so the "
-        f"display text is genuinely timely, not just generic. For keyword, still pick a short "
-        f"literal place-name term (not a weather description). Real attraction names for reference: "
-        f"{_fmt('attraction')}.\n"
+        f"{item1}"
         f"2. A restaurant-category suggestion (e.g. a popular local food style). "
         f"Real restaurant names in Busan for reference: {_fmt('restaurant')}.\n"
         f"3. A cafe-category suggestion (e.g. a large/scenic cafe). "
@@ -186,10 +221,12 @@ def _call_claude_sync(lang: str, month: int, samples: dict[str, list[str]]) -> l
 def get_suggestions(lang: str, db: Session) -> list[dict[str, str]]:
     """DB 캐시(search_suggestion_cache)에서 읽기만 함 — Claude 호출 없음 (2026-08-23 개편).
 
-    실제 생성은 배치 스크립트(scripts/generate_search_suggestions.py)가 한 달에 한 번
-    정도 미리 해두고, 여기는 그 결과를 조회만 한다. 아직 한 번도 안 돌렸거나 그 언어가
-    없으면 FALLBACK_SAMPLES로 대체."""
-    row = db.query(SearchSuggestionCache).filter_by(lang=lang).first()
+    실제 생성은 배치 스크립트(scripts/generate_search_suggestions.py)가 미리 해둔다.
+    2026-08-24부터: 언어당 여러 달(month)치를 미리 저장해둘 수 있어서, "오늘이 몇 월인지"
+    보고 그 달 행을 골라 읽는다 (예: 9월 1일이 되면 자동으로 9월 행을 읽기 시작함 —
+    스케줄러 없이도 날짜만으로 자동 전환됨). 그 달 것도 없으면 FALLBACK_SAMPLES로 대체."""
+    month = date.today().month
+    row = db.query(SearchSuggestionCache).filter_by(lang=lang, month=month).first()
     if row is not None:
         return row.items
     return FALLBACK_SAMPLES.get(lang, FALLBACK_SAMPLES["en"])

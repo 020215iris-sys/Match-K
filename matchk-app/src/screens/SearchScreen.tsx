@@ -8,7 +8,7 @@ import { FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-na
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
-import { endpoints, SearchSuggestion, TourItem } from '@/api/endpoints';
+import { endpoints, Recommendation, SearchSuggestion, TourItem } from '@/api/endpoints';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
 import { useAppStore } from '@/store/appStore';
@@ -16,6 +16,17 @@ import { colors } from '@/theme/colors';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type SearchRoute = RouteProp<RootStackParamList, 'Search'>;
+
+// 카테고리 칩(문장 검색 0건 → 제안) — 이모지/번역키는 프론트 전용, category_dictionary.py의
+// 카테고리 키(beach/park/...)랑 이름을 맞춰야 함 (2026-08-23 "카테고리 칩 + 역추천" 제안).
+const CATEGORY_META: Record<string, { emoji: string; labelKey: string }> = {
+  beach: { emoji: '🏖', labelKey: 'search.category.beach' },
+  park: { emoji: '🌳', labelKey: 'search.category.park' },
+  market: { emoji: '🛒', labelKey: 'search.category.market' },
+  cafe: { emoji: '☕', labelKey: 'search.category.cafe' },
+  viewpoint: { emoji: '🌇', labelKey: 'search.category.viewpoint' },
+  temple: { emoji: '⛩', labelKey: 'search.category.temple' },
+};
 
 export default function SearchScreen() {
   const { t } = useTranslation();
@@ -32,6 +43,10 @@ export default function SearchScreen() {
   const [results, setResults] = useState<TourItem[] | null>(null);
   // display(보여줄 문장)/keyword(탭 시 실제 검색어) 분리 — 문장 그대로 검색하면 0건 나오는 문제 때문
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  // 문장 검색 0건일 때 백엔드가 제안하는 카테고리 키들("beach" 등)
+  const [categoryHints, setCategoryHints] = useState<string[]>([]);
+  // 카테고리 칩 탭한 뒤의 결과 — TourItem이 아니라 역추천 점수가 붙은 Recommendation 모양
+  const [categoryResults, setCategoryResults] = useState<Recommendation[] | null>(null);
 
   // AI(LLM) 추천 검색어/키워드
   useEffect(() => {
@@ -51,14 +66,49 @@ export default function SearchScreen() {
     const trimmed = debounced.trim();
     if (!trimmed) {
       setResults(null);
+      setCategoryHints([]);
+      setCategoryResults(null);
       return;
     }
+    setCategoryResults(null); // 새로 검색 시작하면 이전 카테고리 결과는 지움
     const searchTerm = suggestionKeywordByDisplay.get(trimmed) ?? trimmed;
     endpoints
       .search(searchTerm, lang)
-      .then((r) => setResults(r.items))
-      .catch(() => setResults([]));
+      .then((r) => {
+        setResults(r.items);
+        setCategoryHints(r.categoryHints || []);
+      })
+      .catch(() => {
+        setResults([]);
+        setCategoryHints([]);
+      });
   }, [debounced, lang, suggestionKeywordByDisplay]);
+
+  // 카테고리 칩 탭 — 그 카테고리로 역추천 점수 적용된 결과를 새로 받아옴
+  const onSelectCategory = (category: string) => {
+    endpoints
+      .searchByCategory(category, lang)
+      .then((r) => setCategoryResults(r.items))
+      .catch(() => setCategoryResults([]));
+  };
+
+  const onSelectRecommendation = (item: Recommendation) => {
+    if (query.trim()) addRecentSearch(query.trim());
+    if (pick) {
+      navigation.navigate('ItineraryDetail', {
+        itineraryId: pick.itineraryId,
+        addPlace: {
+          contentid: item.contentid,
+          title: item.title,
+          lat: item.lat,
+          lng: item.lng,
+          sigunguCode: item.sigunguCode,
+        },
+      });
+      return;
+    }
+    navigation.navigate('LandmarkDetail', { contentid: item.contentid, title: item.title });
+  };
 
   const onSelect = (item: TourItem) => {
     if (query.trim()) addRecentSearch(query.trim());
@@ -121,6 +171,36 @@ export default function SearchScreen() {
             </>
           ) : null}
         </View>
+      ) : categoryResults !== null ? (
+        // 카테고리 칩 탭한 뒤 — 역추천 점수 적용된 결과 (Recommendation 모양)
+        <FlatList
+          data={categoryResults}
+          keyExtractor={(i) => i.contentid}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={<Text style={styles.empty}>{t('search.noResults')}</Text>}
+          renderItem={({ item }) => (
+            <Pressable style={styles.row} onPress={() => onSelectRecommendation(item)}>
+              <Text style={styles.rowTitle}>{item.title}</Text>
+            </Pressable>
+          )}
+        />
+      ) : results.length === 0 && categoryHints.length > 0 ? (
+        // 문장 검색 0건 + 제안 카테고리 있음 — 죽은 화면 대신 카테고리 칩 (2026-08-23)
+        <View style={styles.list}>
+          <Text style={styles.empty}>{t('search.noResults')}</Text>
+          <Text style={[styles.suggestTitle, styles.categoryTitle]}>{t('search.categoryHint')}</Text>
+          <View style={styles.categoryChipRow}>
+            {categoryHints.map((cat) => {
+              const meta = CATEGORY_META[cat];
+              if (!meta) return null;
+              return (
+                <Pressable key={cat} style={styles.categoryChip} onPress={() => onSelectCategory(cat)}>
+                  <Text style={styles.categoryChipText}>{meta.emoji}  {t(meta.labelKey)}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </View>
       ) : (
         <FlatList
           data={results}
@@ -158,6 +238,15 @@ const styles = StyleSheet.create({
   recentX: { fontSize: 14, color: colors.textSecondary, paddingLeft: 12 },
   list: { padding: 20 },
   empty: { marginTop: 40, textAlign: 'center', color: colors.textSecondary },
+  categoryTitle: { marginTop: 24, textAlign: 'center' },
+  categoryChipRow: {
+    flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', gap: 10, marginTop: 12,
+  },
+  categoryChip: {
+    paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20,
+    backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border,
+  },
+  categoryChipText: { fontSize: 14, color: colors.textPrimary },
   row: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: colors.border },
   rowTitle: { fontSize: 15, fontWeight: '600', color: colors.textPrimary },
   rowAddr: { fontSize: 12, color: colors.textSecondary, marginTop: 2 },

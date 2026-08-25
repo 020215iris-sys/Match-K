@@ -7,6 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 
 import { endpoints, Recommendation } from '@/api/endpoints';
@@ -37,6 +38,7 @@ export default function Mascot({ recType = 'auto', lat, lng }: Props) {
   const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
   const lang = useAppStore((s) => s.lang);
+  const insets = useSafeAreaInsets(); // 안드로이드 하단 제스처바 등과 안 겹치게
   const [rec, setRec] = useState<Recommendation | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -55,7 +57,7 @@ export default function Mascot({ recType = 'auto', lat, lng }: Props) {
   };
 
   return (
-    <View style={styles.wrap} pointerEvents="box-none">
+    <View style={[styles.wrap, { bottom: 24 + insets.bottom }]} pointerEvents="box-none">
       {open && (
         <View style={styles.bubble}>
           <Text style={styles.greeting}>{t('mascot.greeting')}</Text>
@@ -82,7 +84,7 @@ export default function Mascot({ recType = 'auto', lat, lng }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrap: { position: 'absolute', right: 16, bottom: 24, alignItems: 'flex-end', zIndex: 50 },
+  wrap: { position: 'absolute', right: 16, alignItems: 'flex-end', zIndex: 50 },
   mascot: {
     width: 76, height: 76, alignItems: 'center', justifyContent: 'center',
   },

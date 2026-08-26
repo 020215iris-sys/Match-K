@@ -61,6 +61,7 @@ async def search_by_category(category: str, lang: str = "en", db: Session = Depe
     items = await recommender.score_and_rank(
         db, raw, candidates, user_lang=lang, rec_type="search",
         apply_quota=True, limit=20,
+        preview_foreign=False,   # 검색은 유저가 고른 언어 그대로 (ko면 스왑·번역 안 돌게)
     )
     return {"items": items, "count": len(items), "category": category}
 

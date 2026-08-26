@@ -81,7 +81,10 @@ function toISODate(d: Date): string {
   return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
 }
 
-/** 400 + detail 메시지가 있으면 그대로, 아니면 공통 에러 문구로 폴백. */
+/** 400 + detail 메시지가 있으면 그대로, 422는 날짜 형식 오류로, 401은 로그인 상태에 따라
+ *  구체적으로 분기, 아니면 공통 에러 문구로 폴백.
+ *  · 2026-08-25 추가: 401도 detail(missing_token/invalid_token/user_not_found)에 따라
+ *    구체적인 안내 문구로 분기 (ItineraryDetailScreen.tsx와 동일 처리, 팀원 제보 대응). */
 function alertFromError(t: (key: string) => string, err: unknown) {
   if (err instanceof ApiError && err.status === 400 && typeof (err.body as any)?.detail === 'string') {
     Alert.alert((err.body as any).detail as string);
@@ -89,6 +92,19 @@ function alertFromError(t: (key: string) => string, err: unknown) {
   }
   if (err instanceof ApiError && err.status === 422) {
     Alert.alert(t('scheduler.dateFormatError'));
+    return;
+  }
+  if (err instanceof ApiError && err.status === 401) {
+    const detail = (err.body as any)?.detail;
+    if (detail === 'missing_token') {
+      Alert.alert(t('common.authMissing'));
+    } else if (detail === 'invalid_token') {
+      Alert.alert(t('common.authExpired'));
+    } else if (detail === 'user_not_found') {
+      Alert.alert(t('common.authUserNotFound'));
+    } else {
+      Alert.alert(t('common.authMissing'));
+    }
     return;
   }
   Alert.alert(t('common.error'));

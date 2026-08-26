@@ -51,10 +51,27 @@ import type { RootStackParamList } from '@/navigation/RootNavigator';
 import { colors } from '@/theme/colors';
 
 /** 400(day_index_out_of_range) 등 서버가 detail 메시지를 준 경우 그대로 보여주고,
- *  아니면 공통 에러 문구로 폴백. */
+ *  아니면 공통 에러 문구로 폴백.
+ *  · 2026-08-25 추가: 401도 detail(missing_token/invalid_token/user_not_found)에 따라
+ *    구체적인 안내 문구로 분기. 기존엔 401도 전부 "네트워크/서버 확인"으로 뭉뚱그려져서
+ *    실제로는 로그인 문제인데 원인 파악이 안 됐음(팀원 5명 중 2명 제보) — 백엔드
+ *    security.py는 이미 detail을 정확히 실어 보내고 있었는데 프론트가 안 보여주고 있었음. */
 function alertFromError(t: (key: string) => string, err: unknown) {
   if (err instanceof ApiError && err.status === 400 && typeof (err.body as any)?.detail === 'string') {
     Alert.alert((err.body as any).detail as string);
+    return;
+  }
+  if (err instanceof ApiError && err.status === 401) {
+    const detail = (err.body as any)?.detail;
+    if (detail === 'missing_token') {
+      Alert.alert(t('common.authMissing'));
+    } else if (detail === 'invalid_token') {
+      Alert.alert(t('common.authExpired'));
+    } else if (detail === 'user_not_found') {
+      Alert.alert(t('common.authUserNotFound'));
+    } else {
+      Alert.alert(t('common.authMissing')); // 알 수 없는 401 detail — 로그인 필요로 폴백
+    }
     return;
   }
   Alert.alert(t('common.error'));

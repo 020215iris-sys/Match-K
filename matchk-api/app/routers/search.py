@@ -56,7 +56,18 @@ async def search_by_category(category: str, lang: str = "en", db: Session = Depe
     if cat is None:
         raise HTTPException(404, "unknown_category")
     keyword = cat["keyword"].get(lang, cat["keyword"]["en"])
-    raw = await tourapi_client.search_by_keyword(lang, keyword, rows=30)
+    # 카테고리에 따라 키워드가 문자열 하나(기존)이거나 리스트(여러 개 합치기, 신규)일 수 있음 —
+    # 리스트면 각각 검색해서 결과를 contentid 기준으로 중복 없이 합침 (2026-08-25, 사찰부터 적용).
+    keywords = keyword if isinstance(keyword, list) else [keyword]
+    raw: list[dict] = []
+    seen_ids: set[str] = set()
+    for kw in keywords:
+        items = await tourapi_client.search_by_keyword(lang, kw, rows=30)
+        for item in items:
+            cid = item.get("contentid")
+            if cid and cid not in seen_ids:
+                seen_ids.add(cid)
+                raw.append(item)
     candidates = recommender.candidates_from_raw(raw)
     items = await recommender.score_and_rank(
         db, raw, candidates, user_lang=lang, rec_type="search",

@@ -50,7 +50,7 @@
   "search": {
     "noResults": "検索結果がありません",
     "nearbyInstead": "近くのおすすめスポット",
-    "aiSuggest": "AIおすすめ検索",
+    "aiSuggest": "おすすめ観光地",
     "recent": "最近の検索",
     "categoryHint": "こんな場所はどうですか？",
     "category": {

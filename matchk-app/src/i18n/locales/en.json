@@ -90,6 +90,9 @@
     "close": "Close",
     "create": "Create",
     "cancel": "Cancel",
-    "done": "Done"
+    "done": "Done",
+    "authMissing": "You need to sign in",
+    "authExpired": "Your session has expired — please sign in again",
+    "authUserNotFound": "Account not found — please sign in again"
   }
 }

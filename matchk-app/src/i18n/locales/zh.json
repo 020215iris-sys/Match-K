@@ -90,6 +90,9 @@
     "close": "关闭",
     "create": "创建",
     "cancel": "取消",
-    "done": "完成"
+    "done": "完成",
+    "authMissing": "需要登录",
+    "authExpired": "登录已过期，请重新登录",
+    "authUserNotFound": "找不到账户信息，请重新登录"
   }
 }

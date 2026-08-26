@@ -100,6 +100,9 @@
     "close": "닫기",
     "create": "만들기",
     "cancel": "취소",
-    "done": "완료"
+    "done": "완료",
+    "authMissing": "로그인이 필요해요",
+    "authExpired": "로그인이 만료됐어요, 다시 로그인해주세요",
+    "authUserNotFound": "계정 정보를 찾을 수 없어요, 다시 로그인해주세요"
   }
 }

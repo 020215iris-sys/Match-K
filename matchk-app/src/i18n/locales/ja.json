@@ -85,6 +85,7 @@
     "logout": "ログアウト",
     "guest": "ゲストとして続ける",
     "loginGoogle": "Googleでログイン",
+    "devBuildRequired": "この機能はインストールされたアプリでのみ利用できます",
     "deleteTitle": "退会",
     "deleteWarning": "アカウントとすべてのスタンプ記録が完全に削除されます。元に戻せません。本当に退会しますか？",
     "deleteConfirm": "退会する",
@@ -99,6 +100,9 @@
     "close": "閉じる",
     "create": "作成",
     "cancel": "キャンセル",
-    "done": "完了"
+    "done": "完了",
+    "authMissing": "ログインが必要です",
+    "authExpired": "ログインの有効期限が切れました。再度ログインしてください",
+    "authUserNotFound": "アカウント情報が見つかりません。再度ログインしてください"
   }
 }

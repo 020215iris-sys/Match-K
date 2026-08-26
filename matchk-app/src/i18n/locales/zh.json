@@ -85,6 +85,7 @@
     "logout": "退出登录",
     "guest": "以访客身份继续",
     "loginGoogle": "使用 Google 登录",
+    "devBuildRequired": "此功能仅在已安装的应用中可用",
     "deleteTitle": "注销账户",
     "deleteWarning": "您的账户和所有印章记录将被永久删除，且无法恢复。确定要注销吗？",
     "deleteConfirm": "注销",
@@ -99,6 +100,9 @@
     "close": "关闭",
     "create": "创建",
     "cancel": "取消",
-    "done": "完成"
+    "done": "完成",
+    "authMissing": "需要登录",
+    "authExpired": "登录已过期，请重新登录",
+    "authUserNotFound": "找不到账户信息，请重新登录"
   }
 }

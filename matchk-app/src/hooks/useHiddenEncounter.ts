@@ -1,65 +1,50 @@
-/** 히든 미션 조우 감지 (포켓몬 고식).
- *  ⚠️ 위치정보보호법: 서버에서 히든 좌표만 받아오고, 근접 판정은 단말기 내에서 수행.
- *     사용자 GPS는 서버로 전송하지 않는다. */
-import * as Location from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+/** 히든 미션 조우 팝업 상태 관리 (2026-08 개편: GPS 근접 감지 → 구별 도장 비율 트리거).
+ *
+ *  이전 방식은 히든 좌표 목록을 받아 15초마다 GPS를 읽어 근접을 판정했다.
+ *  지금은 위치를 전혀 읽지 않는다 — 서버(stamps.py district_status)가
+ *  "이 구는 조건을 채웠다(hiddenReady) + 대상은 이거다(targetContentId)"까지 이미 계산해서
+ *  내려주므로, 이 훅은 그 값을 받아 팝업 열림/닫힘/수집 상태만 관리한다.
+ *  ⚠️ 위치정보보호법 문서와 무관해짐 — 더 이상 GPS를 다루지 않기 때문. */
+import { useEffect, useState } from 'react';
 
 import { endpoints } from '@/api/endpoints';
-import { haversineM, STAMP_RADIUS_M } from '@/utils/geo';
 
-// 조우 감지 반경 (도장 반경보다 살짝 넓게 — "근처에 숨은 곳이 있어요" 예고 느낌)
-const ENCOUNTER_RADIUS_M = 150;
-const POLL_MS = 15000; // 15초마다 근접 확인
-
-export interface HiddenEncounter {
-  contentid: string;
-  distanceM: number;
+interface UseHiddenEncounterArgs {
+  /** 이 구의 히든 발동 조건(구 도장 비율) 달성 여부 — /api/stamps/district/{code}의 hiddenReady */
+  hiddenReady: boolean;
+  /** 서버가 지정한 이 구의 히든 후보 contentid. 조건 미달이거나 다 모았으면 null */
+  targetContentId: string | null;
 }
 
-export function useHiddenEncounter(enabled: boolean) {
-  const [encounter, setEncounter] = useState<HiddenEncounter | null>(null);
-  const spots = useRef<{ contentid: string; lat: number; lng: number }[]>([]);
-  const dismissed = useRef<Set<string>>(new Set());
+export function useHiddenEncounter({ hiddenReady, targetContentId }: UseHiddenEncounterArgs) {
+  const [visible, setVisible] = useState(false);
+  const [collecting, setCollecting] = useState(false);
 
-  // 잠금 해제 시 히든 좌표 목록 1회 로드
+  // 구를 이동하거나(다른 sigunguCode) 대상이 바뀌면 이전 구의 팝업이 열려있지 않도록 초기화
   useEffect(() => {
-    if (!enabled) return;
-    endpoints.hiddenLandmarks()
-      .then((res) => { spots.current = res.unlocked ? res.items : []; })
-      .catch(() => { spots.current = []; });
-  }, [enabled]);
+    setVisible(false);
+  }, [targetContentId]);
 
-  // 주기적으로 현재 위치 ↔ 히든 좌표 근접 판정 (단말기 내 계산)
-  useEffect(() => {
-    if (!enabled) return;
-    let active = true;
-    const check = async () => {
-      if (spots.current.length === 0) return;
-      try {
-        const { status } = await Location.getForegroundPermissionsAsync();
-        if (status !== 'granted') return;
-        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-        for (const s of spots.current) {
-          if (dismissed.current.has(s.contentid)) continue;
-          const d = haversineM(pos.coords.latitude, pos.coords.longitude, s.lat, s.lng);
-          if (d <= ENCOUNTER_RADIUS_M && active) {
-            setEncounter({ contentid: s.contentid, distanceM: Math.round(d) });
-            break;
-          }
-        }
-      } catch {
-        /* GPS 실패 시 조용히 스킵 */
-      }
-    };
-    check();
-    const id = setInterval(check, POLL_MS);
-    return () => { active = false; clearInterval(id); };
-  }, [enabled]);
+  const canOpen = hiddenReady && targetContentId !== null;
 
-  const dismiss = () => {
-    if (encounter) dismissed.current.add(encounter.contentid);
-    setEncounter(null);
+  const open = () => {
+    if (canOpen) setVisible(true);
   };
 
-  return { encounter, dismiss, canStamp: (d: number) => d <= STAMP_RADIUS_M };
+  const dismiss = () => setVisible(false);
+
+  /** 팝업의 "찍겠습니까?" 확정 — GPS 재검증 없음(화면 내 팝업 자체가 트리거). */
+  const collect = async (onCollected?: (contentid: string) => void) => {
+    if (!targetContentId || collecting) return;
+    setCollecting(true);
+    try {
+      await endpoints.createStamp(targetContentId);
+      setVisible(false);
+      onCollected?.(targetContentId);
+    } finally {
+      setCollecting(false);
+    }
+  };
+
+  return { visible, collecting, canOpen, open, dismiss, collect, targetContentId };
 }

@@ -71,6 +71,8 @@ export interface DistrictStampStatus {
   hiddenStampedContentIds: string[];
   progress: number;
   hiddenReady: boolean;
+  /** 히든 팝업에 띄울 대상 1곳. hiddenReady일 때만 값이 있고, 이 구의 히든을 전부 모았으면 null. */
+  hiddenTargetContentId: string | null;
 }
 
 // AI 추천 검색어 — display(화면 표시용 문장) / keyword(탭했을 때 실제 검색에 쓰는 짧은 단어) 분리
@@ -122,16 +124,10 @@ export const endpoints = {
   createStamp: (contentid: string) =>
     api<{ stampId: number; isHidden: boolean }>('/api/stamps', { method: 'POST', body: { contentid } }),
 
-  // 히든 미션: 잠금 해제 여부 + 발견 개수(총 개수 비공개)
+  // 히든 미션: 지금까지 발견한 개수만 (총 개수 비공개). 발동 조건·팝업 대상은
+  // districtStampStatus의 hiddenReady/hiddenTargetContentId 쪽에서 온다 (2026-08 개편).
   hiddenStatus: () =>
-    api<{ unlocked: boolean; mapProgress: number; stampProgress: number;
-          mapThreshold: number; stampThreshold: number; discovered: number }>(
-      '/api/hidden/status'),
-
-  // 근접 판정용 히든 장소 좌표 (이름 없음 — 조우 시 상세 API로 조회). 잠금 전엔 빈 목록.
-  hiddenLandmarks: () =>
-    api<{ items: { contentid: string; lat: number; lng: number }[]; unlocked: boolean }>(
-      '/api/hidden/landmarks'),
+    api<{ discovered: number }>('/api/hidden/status'),
 
   progress: () =>
     api<{ districts: DistrictProgress[]; totalLandmarks: number; totalStamped: number }>(

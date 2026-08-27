@@ -35,9 +35,11 @@ class Settings(BaseSettings):
     DEMO_MODE: bool = False
     GPS_RADIUS_M: int = 100
 
-    # 히든 미션 발동 조건 (⚠️ 임시값 — 다음 주 팀 회의로 조정). 둘 다 충족해야 잠금 해제.
-    HIDDEN_MAP_THRESHOLD: float = 0.20    # 업적지도 색칠 비율 20% 이상
-    HIDDEN_STAMP_THRESHOLD: float = 0.30  # 일반 도장 수집 비율 30% 이상
+    # 히든 미션 발동 조건 (⚠️ 임시값 — 팀 회의로 조정 예정).
+    # HIDDEN_MAP_THRESHOLD: 2026-08 개편으로 전체 비율 통합 잠금 방식은 폐기, 현재 미사용(hidden.py 참고).
+    #   삭제하지 않고 남겨둠 — 값 자체를 지우면 다른 브랜치의 .env/스크립트와 충돌할 수 있어서.
+    HIDDEN_MAP_THRESHOLD: float = 0.20
+    HIDDEN_STAMP_THRESHOLD: float = 0.30  # 구별 도장 수집 비율 30% 이상 → hiddenReady (stamps.py에서 사용)
 
     # TourAPI 지역 코드
     BUSAN_AREA_CODE: int = 6

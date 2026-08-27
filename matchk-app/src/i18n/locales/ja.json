@@ -22,7 +22,8 @@
     "title": "実績マップ",
     "progress": "マイコレクション {{stamped}} / 釜山全体 {{total}}",
     "tapBusan": "釜山をタップして区ごとに表示",
-    "hiddenReady": "隠れスタンプを獲得できます！"
+    "hiddenReady": "隠れスタンプを獲得できます！",
+    "hiddenBannerHint": "タップして確認"
   },
   "scheduler": {
     "title": "スケジューラー",
@@ -64,7 +65,7 @@
   },
   "hidden": {
     "encounterTitle": "隠れスポット発見！",
-    "encounterSub": "あなたの言語では知られていない釜山の隠れた名所が近くにあります",
+    "encounterSub": "この区のスタンプをすべて集めたので現れた隠れスポットです",
     "collect": "隠れスタンプを獲得",
     "later": "後で",
     "discovered": "隠れスポット{{count}}カ所発見"

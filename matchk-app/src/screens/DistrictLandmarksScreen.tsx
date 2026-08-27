@@ -1,17 +1,20 @@
 /** 업적지도 ③ 구 상세 (2026-07-31 개편) — 상단 구 지도 + 하단 도장 리스트 (네이버지도식).
  *  · 도장: 진입 시 포그라운드 원샷 GPS로 근처 안 찍힌 장소 자동 도장 (폰 내 계산, 위치 서버 전송 X).
- *  · 히든: 구 도장 비율(hiddenReady) 달성 시 배너 노출. 히든 도장은 리스트 최상단 고정.
- *  TODO(현표): 구별 지도 이미지 삽입, 도장 애니메이션/진동, 히든 팝업(대상 contentid는 백엔드 지정 후). */
+ *  · 히든: 구 도장 비율(hiddenReady) 달성 시 배너 노출 → 탭하면 팝업("찍겠습니까?").
+ *    2026-08 개편: GPS 근접 감지 폐기, 대상 contentid는 백엔드가 지정(hiddenTargetContentId).
+ *  TODO(현표): 구별 지도 이미지 삽입(현재 이모지 플레이스홀더 — 디자인팀 일러스트 대기). */
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type { RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Location from 'expo-location';
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { endpoints, TourItem } from '@/api/endpoints';
 import ErrorNotice from '@/components/ErrorNotice';
+import HiddenEncounterPopup from '@/components/HiddenEncounterPopup';
+import { useHiddenEncounter } from '@/hooks/useHiddenEncounter';
 import { haversineM, STAMP_RADIUS_M } from '@/utils/geo';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
 import { useAppStore } from '@/store/appStore';
@@ -22,6 +25,30 @@ const DEMO_STAMP = process.env.EXPO_PUBLIC_DEMO_STAMP === 'true';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type DistrictRoute = RouteProp<RootStackParamList, 'DistrictLandmarks'>;
+
+/** 도장칸 한 줄 — 방금 찍힌 순간엔 팝(pop) 애니메이션, 이미 찍혀있던 건 정적으로 표시. */
+function StampSlot({ isStamped, justStamped }: { isStamped: boolean; justStamped: boolean }) {
+  const pop = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (justStamped) {
+      pop.setValue(0.3);
+      Animated.spring(pop, { toValue: 1, friction: 4, tension: 120, useNativeDriver: true }).start();
+    }
+  }, [justStamped, pop]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.stampSlot,
+        isStamped && styles.stampSlotDone,
+        justStamped && { transform: [{ scale: pop }] },
+      ]}
+    >
+      <Text style={styles.stampMark}>{isStamped ? '✓' : ''}</Text>
+    </Animated.View>
+  );
+}
 
 export default function DistrictLandmarksScreen() {
   const { t } = useTranslation();
@@ -34,9 +61,13 @@ export default function DistrictLandmarksScreen() {
   const [stampedIds, setStampedIds] = useState<Set<string>>(new Set());
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
   const [hiddenReady, setHiddenReady] = useState(false);
+  const [hiddenTargetId, setHiddenTargetId] = useState<string | null>(null);
+  const [justStampedId, setJustStampedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+
+  const hidden = useHiddenEncounter({ hiddenReady, targetContentId: hiddenTargetId });
 
   useEffect(() => {
     let active = true;
@@ -54,6 +85,7 @@ export default function DistrictLandmarksScreen() {
         const stamped = new Set(status?.stampedContentIds ?? []);
         setHiddenIds(new Set(status?.hiddenStampedContentIds ?? []));
         setHiddenReady(status?.hiddenReady ?? false);
+        setHiddenTargetId(status?.hiddenTargetContentId ?? null);
 
         // ── 포그라운드 원샷 GPS 자동 도장 ───────────────────────
         // 위치를 딱 한 번 읽어, 근처(<반경) 안 찍힌 장소를 자동으로 찍는다.
@@ -71,6 +103,7 @@ export default function DistrictLandmarksScreen() {
                   try {
                     await endpoints.createStamp(it.contentid); // 서버엔 contentid만
                     stamped.add(it.contentid);
+                    if (active) setJustStampedId(it.contentid);
                   } catch {
                     /* 이미 찍혔거나 seed에 없는 장소 — 무시 */
                   }
@@ -108,11 +141,30 @@ export default function DistrictLandmarksScreen() {
         <Text style={styles.mapEmoji}>📍 {name}</Text>
       </View>
 
-      {hiddenReady ? (
-        <View style={styles.hiddenBanner}>
-          {/* TODO(현표): 히든 조우 팝업(HiddenEncounterPopup 재활용) — "찍겠습니까?" (대상 contentid 백엔드 지정 후) */}
+      {hidden.canOpen ? (
+        <Pressable style={styles.hiddenBanner} onPress={hidden.open}>
           <Text style={styles.hiddenBannerText}>✦ {t('map.hiddenReady')}</Text>
-        </View>
+          <Text style={styles.hiddenBannerHint}>{t('map.hiddenBannerHint')}</Text>
+        </Pressable>
+      ) : null}
+
+      {hidden.visible && hidden.targetContentId ? (
+        <HiddenEncounterPopup
+          contentid={hidden.targetContentId}
+          lang={lang}
+          collecting={hidden.collecting}
+          onDismiss={hidden.dismiss}
+          onCollect={() =>
+            hidden.collect((collectedId) => {
+              setHiddenIds((prev) => new Set(prev).add(collectedId));
+              setJustStampedId(collectedId);
+              // 이 구에 남은 히든이 있으면 다음 대상을 다시 조회 (배너가 이어서 열리도록)
+              endpoints.districtStampStatus(sigunguCode)
+                .then((s) => setHiddenTargetId(s.hiddenTargetContentId))
+                .catch(() => setHiddenTargetId(null));
+            })
+          }
+        />
       ) : null}
 
       {error !== null ? (
@@ -138,10 +190,8 @@ export default function DistrictLandmarksScreen() {
                   </Text>
                   {item.addr1 ? <Text style={styles.rowAddr} numberOfLines={1}>{item.addr1}</Text> : null}
                 </View>
-                {/* 도장칸 — 찍힘: 금색 / 안 찍힘: 빈칸(점선) */}
-                <View style={[styles.stampSlot, isStamped && styles.stampSlotDone]}>
-                  <Text style={styles.stampMark}>{isStamped ? '✓' : ''}</Text>
-                </View>
+                {/* 도장칸 — 찍힘: 금색(+방금 찍힌 경우 팝 애니메이션) / 안 찍힘: 빈칸(점선) */}
+                <StampSlot isStamped={isStamped} justStamped={justStampedId === item.contentid} />
               </Pressable>
             );
           }}
@@ -162,6 +212,7 @@ const styles = StyleSheet.create({
   mapEmoji: { fontSize: 20, fontWeight: '700', color: colors.textSecondary },
   hiddenBanner: { backgroundColor: colors.stampGold, paddingVertical: 10, alignItems: 'center' },
   hiddenBannerText: { color: '#fff', fontWeight: '700', fontSize: 14 },
+  hiddenBannerHint: { color: '#fff', fontSize: 11, marginTop: 2, opacity: 0.85 },
   list: { flex: 1 },
   listBody: { padding: 20 },
   empty: { marginTop: 40, textAlign: 'center', color: colors.textSecondary },

@@ -1,7 +1,8 @@
 /** 히든 조우 팝업 — 일반 도장(상세 화면 버튼)과 완전히 다른 이벤트성 UI (포켓몬 고식).
- *  근처에 숨은 장소가 나타났을 때 전체화면 모달로 등장. */
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+ *  2026-08 개편: GPS 근접 조우가 아니라, 업적지도 3페이지에서 그 구 도장 비율을
+ *  채웠을 때 배너를 탭하면 뜨는 전체화면 모달. useHiddenEncounter가 열림/대상을 관리한다. */
+import React, { useEffect, useRef, useState } from 'react';
+import { Animated, ActivityIndicator, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useTranslation } from 'react-i18next';
 
 import { endpoints } from '@/api/endpoints';
@@ -10,7 +11,7 @@ import { colors } from '@/theme/colors';
 interface Props {
   contentid: string;
   lang: string;
-  onCollect: () => void;   // 히든 도장 수집 시도 (부모가 GPS 재검증 후 createStamp)
+  onCollect: () => void;   // 히든 도장 수집 확정 (GPS 재검증 없음 — 팝업 자체가 트리거)
   onDismiss: () => void;
   collecting: boolean;
 }
@@ -18,6 +19,8 @@ interface Props {
 export default function HiddenEncounterPopup({ contentid, lang, onCollect, onDismiss, collecting }: Props) {
   const { t } = useTranslation();
   const [title, setTitle] = useState<string | null>(null);
+  // 등장 연출 — 도장/발견 계열 이벤트에 공통으로 쓸 팝(pop) 애니메이션 (스프링 스케일)
+  const pop = useRef(new Animated.Value(0)).current;
 
   // 조우한 순간에만 이름 조회 (그 전까지는 좌표만 알고 정체는 숨김)
   useEffect(() => {
@@ -28,10 +31,20 @@ export default function HiddenEncounterPopup({ contentid, lang, onCollect, onDis
     return () => { on = false; };
   }, [contentid, lang]);
 
+  useEffect(() => {
+    pop.setValue(0);
+    Animated.spring(pop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }).start();
+  }, [contentid, pop]);
+
   return (
     <Modal transparent animationType="fade" visible>
       <View style={styles.backdrop}>
-        <View style={styles.card}>
+        <Animated.View
+          style={[
+            styles.card,
+            { transform: [{ scale: pop }], opacity: pop },
+          ]}
+        >
           <Text style={styles.spark}>✦</Text>
           <Text style={styles.header}>{t('hidden.encounterTitle')}</Text>
           <Text style={styles.sub}>{t('hidden.encounterSub')}</Text>
@@ -48,7 +61,7 @@ export default function HiddenEncounterPopup({ contentid, lang, onCollect, onDis
           <Pressable onPress={onDismiss} hitSlop={8}>
             <Text style={styles.later}>{t('hidden.later')}</Text>
           </Pressable>
-        </View>
+        </Animated.View>
       </View>
     </Modal>
   );

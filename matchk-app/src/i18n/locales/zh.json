@@ -50,8 +50,17 @@
   "search": {
     "noResults": "没有搜索结果",
     "nearbyInstead": "附近推荐",
-    "aiSuggest": "AI推荐搜索",
-    "recent": "最近搜索"
+    "aiSuggest": "推荐景点",
+    "recent": "最近搜索",
+    "categoryHint": "这些怎么样？",
+    "category": {
+      "beach": "海水浴场",
+      "park": "公园",
+      "market": "传统市场",
+      "cafe": "咖啡厅",
+      "viewpoint": "观景台",
+      "temple": "寺庙"
+    }
   },
   "hidden": {
     "encounterTitle": "发现隐藏景点！",
@@ -76,12 +85,14 @@
     "logout": "退出登录",
     "guest": "以访客身份继续",
     "loginGoogle": "使用 Google 登录",
+    "devBuildRequired": "此功能仅在已安装的应用中可用",
     "deleteTitle": "注销账户",
     "deleteWarning": "您的账户和所有印章记录将被永久删除，且无法恢复。确定要注销吗？",
     "deleteConfirm": "注销",
     "deleteDone": "账户已注销",
     "cancel": "取消",
-    "privacy": "隐私政策"
+    "privacy": "隐私政策",
+    "terms": "服务条款"
   },
   "common": {
     "loading": "加载中...",

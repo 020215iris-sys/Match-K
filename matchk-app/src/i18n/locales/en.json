@@ -50,8 +50,17 @@
   "search": {
     "noResults": "No results found",
     "nearbyInstead": "Recommended nearby",
-    "aiSuggest": "AI suggested searches",
-    "recent": "Recent searches"
+    "aiSuggest": "Recommended Spots",
+    "recent": "Recent searches",
+    "categoryHint": "How about these?",
+    "category": {
+      "beach": "Beach",
+      "park": "Park",
+      "market": "Traditional market",
+      "cafe": "Cafe",
+      "viewpoint": "Viewpoint",
+      "temple": "Temple"
+    }
   },
   "hidden": {
     "encounterTitle": "Hidden spot found!",
@@ -76,12 +85,14 @@
     "logout": "Log out",
     "guest": "Continue as guest",
     "loginGoogle": "Sign in with Google",
+    "devBuildRequired": "This feature is only available in the installed app, not this preview",
     "deleteTitle": "Delete account",
     "deleteWarning": "Your account and all stamp records will be permanently deleted. This cannot be undone. Delete anyway?",
     "deleteConfirm": "Delete",
     "deleteDone": "Your account has been deleted",
     "cancel": "Cancel",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
   },
   "common": {
     "loading": "Loading...",

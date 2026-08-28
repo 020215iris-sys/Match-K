@@ -50,8 +50,17 @@
   "search": {
     "noResults": "검색 결과가 없어요",
     "nearbyInstead": "근처 추천 여행지",
-    "aiSuggest": "AI 추천 검색어",
-    "recent": "최근 검색어"
+    "aiSuggest": "추천 관광지",
+    "recent": "최근 검색어",
+    "categoryHint": "이런 곳은 어때요?",
+    "category": {
+      "beach": "해변",
+      "park": "공원",
+      "market": "전통시장",
+      "cafe": "카페",
+      "viewpoint": "전망대",
+      "temple": "사찰"
+    }
   },
   "hidden": {
     "encounterTitle": "숨은 곳 발견!",
@@ -76,12 +85,14 @@
     "logout": "로그아웃",
     "guest": "게스트로 계속하기",
     "loginGoogle": "Google로 로그인",
+    "devBuildRequired": "이 기능은 개발 빌드/설치된 앱에서만 사용할 수 있어요",
     "deleteTitle": "회원탈퇴",
     "deleteWarning": "계정과 모든 도장 기록이 영구 삭제됩니다. 되돌릴 수 없어요. 정말 탈퇴하시겠어요?",
     "deleteConfirm": "탈퇴",
     "deleteDone": "탈퇴가 완료되었습니다",
     "cancel": "취소",
-    "privacy": "개인정보처리방침"
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관"
   },
   "common": {
     "loading": "불러오는 중...",

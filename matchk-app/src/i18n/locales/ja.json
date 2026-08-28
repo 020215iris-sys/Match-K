@@ -50,8 +50,17 @@
   "search": {
     "noResults": "検索結果がありません",
     "nearbyInstead": "近くのおすすめスポット",
-    "aiSuggest": "AIおすすめ検索",
-    "recent": "最近の検索"
+    "aiSuggest": "おすすめ観光地",
+    "recent": "最近の検索",
+    "categoryHint": "こんな場所はどうですか？",
+    "category": {
+      "beach": "海水浴場",
+      "park": "公園",
+      "market": "伝統市場",
+      "cafe": "カフェ",
+      "viewpoint": "展望台",
+      "temple": "寺"
+    }
   },
   "hidden": {
     "encounterTitle": "隠れスポット発見！",
@@ -76,12 +85,14 @@
     "logout": "ログアウト",
     "guest": "ゲストとして続ける",
     "loginGoogle": "Googleでログイン",
+    "devBuildRequired": "この機能はインストールされたアプリでのみ利用できます",
     "deleteTitle": "退会",
     "deleteWarning": "アカウントとすべてのスタンプ記録が完全に削除されます。元に戻せません。本当に退会しますか？",
     "deleteConfirm": "退会する",
     "deleteDone": "退会が完了しました",
     "cancel": "キャンセル",
-    "privacy": "プライバシーポリシー"
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約"
   },
   "common": {
     "loading": "読み込み中...",

@@ -37,9 +37,6 @@ const TERMS_OF_SERVICE_URL = 'https://github.com/020215iris-sys/Match-K/blob/mai
 // 이걸로 먼저 확인해야 google-signin 패키지를 아예 안 불러올 수 있음(Expo Go 대응).
 const isGoogleSignInAvailable = () => TurboModuleRegistry.get('RNGoogleSignin') != null;
 
-// TurboModuleRegistry.get()은 getEnforcing()과 달리 없어도 안 던지고 null 반환 —
-// 이걸로 먼저 확인해야 google-signin 패키지를 아예 안 불러올 수 있음(Expo Go 대응).
-const isGoogleSignInAvailable = () => TurboModuleRegistry.get('RNGoogleSignin') != null;
 
 export default function ProfileScreen() {
   const { t } = useTranslation();

@@ -50,7 +50,7 @@
   "search": {
     "noResults": "No results found",
     "nearbyInstead": "Recommended nearby",
-    "aiSuggest": "Recommended Spots",
+    "aiSuggest": "AI suggested searches",
     "recent": "Recent searches",
     "categoryHint": "How about these?",
     "category": {

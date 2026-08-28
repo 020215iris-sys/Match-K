@@ -50,7 +50,7 @@
   "search": {
     "noResults": "검색 결과가 없어요",
     "nearbyInstead": "근처 추천 여행지",
-    "aiSuggest": "추천 관광지",
+    "aiSuggest": "AI 추천 검색어",
     "recent": "최근 검색어",
     "categoryHint": "이런 곳은 어때요?",
     "category": {

@@ -50,7 +50,7 @@
   "search": {
     "noResults": "没有搜索结果",
     "nearbyInstead": "附近推荐",
-    "aiSuggest": "推荐景点",
+    "aiSuggest": "AI推荐搜索",
     "recent": "最近搜索",
     "categoryHint": "这些怎么样？",
     "category": {

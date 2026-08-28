@@ -91,7 +91,8 @@
     "deleteConfirm": "Delete",
     "deleteDone": "Your account has been deleted",
     "cancel": "Cancel",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
   },
   "common": {
     "loading": "Loading...",

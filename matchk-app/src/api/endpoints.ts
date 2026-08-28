@@ -137,6 +137,11 @@ export const endpoints = {
     api<{ districts: DistrictProgress[]; totalLandmarks: number; totalStamped: number }>(
       '/api/stamps/progress'),
 
+  // 앱 재시작 시 기존 토큰이 누구 것인지 확인용 (게스트/구글 구분해 화면에 정확히 표시)
+  me: () =>
+    api<{ id: number; name: string; email: string | null; lang: string; isGuest: boolean }>(
+      '/api/users/me'),
+
   updateLanguage: (lang: string) =>
     api<{ lang: string }>('/api/users/me/language', { method: 'PATCH', body: { lang } }),
 

@@ -31,7 +31,15 @@ settings = get_settings()
 # --- 가중치 (D7 [C] 튜닝) ---
 W_FOREIGN = 1.0    # 구 단위 외국인 방문 지수
 W_DOMESTIC = 0.8   # 구 단위 내국인 방문 지수 (낮을수록 가산)
-W_THIN = 1.2       # 언어권 커버리지 얇음 (방향 2)
+# 2026-08-26 D7 튜닝: 1.2 → 2.0. 점수 4항목 중 3개(FOREIGN·DOMESTIC·DECLINING)가 구 단위라
+# 같은 구 안에서는 이 항목만 순위를 가른다. 1.2에서는 구 점수(최대 2.4)에 눌려
+# 세 언어권 상위5가 15슬롯 중 7개 장소로 수렴했다(겹침 8).
+# 2.0으로 올리면 고유 13개(겹침 2)가 되면서 소멸위험 구 비율 60%는 그대로 유지된다.
+# ※ 2.4 + 쿼터 0.5 조합은 thin 적중률이 조금 오르지만 소멸위험 비율이 50%로 내려가
+#   공모전 취지를 깎는 교환이라 채택하지 않았다.
+# ※ W_DOMESTIC 제거(D0.0) 조합은 겹침 3으로 오히려 나빠서, "내국인이 적을수록 가산"
+#   방향은 유지하는 것으로 결론. (근거: app/scripts/tuning_report.py)
+W_THIN = 2.0       # 언어권 커버리지 얇음 (방향 2)
 W_DECLINING = 0.6  # 소멸위험 구 보너스 (nearby용)
 
 # auto 결과 중 소멸위험 구 최소 보장 비율 (팀 회의 조정 대상 — 1.0이면 기존 하드 필터와 동일)
@@ -229,27 +237,47 @@ async def score_and_rank(
     user_id: int | None = None,
     limit: int = 10,
     apply_quota: bool | None = None,
+    preview_foreign: bool = True,
 ) -> list[dict]:
     """후보에 점수를 매기고 정렬·언어 스왑·혼잡 태그까지 붙여 응답 dict 리스트로 반환.
 
     ▸ 기존 recommend()의 Step 2~5 + D8 블록을 옮긴 것. 점수 계산식은 변경 없음.
 
+    ⚠️ 이 함수가 "조용히" 하는 일 3가지 — 재사용 전에 반드시 확인할 것.
+       (2026-08-19에 공용으로 분리했지만 아래 전제를 안 적어둔 탓에, 8/23 카테고리 검색에서
+        한국어 결과가 영어로 나오고 Papago가 요청당 최대 20번 호출되는 버그가 났다.)
+
+       ① user_lang이 "ko"면 **내부에서 "en"으로 바꾼다** (preview_foreign=True 기본값).
+          그 순간 Step 5(언어 스왑 + Papago 번역 폴백)까지 함께 켜진다.
+          한국어 결과를 그대로 원하는 호출부는 preview_foreign=False를 줄 것.
+       ② raw는 **국문** 원본이어야 한다. 외국어 서비스 응답을 넘기면
+          coverage_by_contentid가 자기 언어 등록부와 자기를 대조해 thinness가 음수가 되고,
+          가중치 최대(W_THIN=1.2)인 언어 신호가 통째로 뒤집힌다.
+       ③ candidates의 contentid도 **국문 체계**여야 한다. TourAPI는 언어판마다 contentid가
+          달라서, 외국어 contentid를 넘기면 DB(국문 기준)의 히든·도장 제외 필터가
+          한 건도 안 걸린다 → 히든 장소가 결과에 그대로 노출된다.
+
     Args:
-        raw: 후보의 TourAPI **국문** 원본 item 리스트.
+        raw: 후보의 TourAPI **국문** 원본 item 리스트 (위 ② 참고).
              ★ Step 3(lang_mapping.coverage_by_contentid)이 Candidate가 아니라 원본 dict를
                요구해서 별도 인자로 받는다. 빈 리스트를 주면 커버리지 가산(W_THIN, 가중치 1.2로
                가장 큼)이 통째로 빠져 "네 언어권엔 얇게 소개된 곳"이라는 차별화가 사라진다.
-        candidates: 점수를 매길 대상. candidates_from_raw(raw)로 만들면 된다.
+        candidates: 점수를 매길 대상. candidates_from_raw(raw)로 만들면 된다 (위 ③ 참고).
         user_lang: 정규화 전 원본 언어 코드(예: "ja-JP"). 내부에서 normalize 한다.
         rec_type: "auto"면 소멸위험 구 쿼터가 걸린다 (apply_quota=None일 때).
         apply_quota: 소멸위험 구 쿼터 적용 여부.
              None(기본) → 기존 동작 유지: rec_type == "auto" 일 때만 적용.
              True/False → 호출부에서 명시적으로 강제.
-             ★ 신규 인자. 검색처럼 rec_type 이름을 자유롭게 쓰고 싶은 쪽을 위한 명시 스위치.
+        preview_foreign: ko를 en으로 바꿀지 (위 ① 참고).
+             True(기본) → 기존 동작 유지. 홈 역추천용 — 한국인에게 외국인용 미리보기.
+             False → 유저가 고른 언어 그대로. ko면 Step 5 자체가 안 돌아 번역 호출도 없다.
+             ★ 신규 인자 (2026-08-24, 지현님 제보 반영).
     """
     lang = tourapi_client.normalize_lang(user_lang)
-    if lang == "ko":
-        lang = "en"  # 역추천은 외국인 대상 기능. 한국인 유저는 영어권 결과로 미리보기
+    if preview_foreign and lang == "ko":
+        # 역추천(홈)은 외국인 대상 기능 → 한국인 유저에겐 영어권 결과를 미리보기로.
+        # ⚠️ 여기서 en이 되면 아래 Step 5(언어 스왑 + Papago 폴백)까지 같이 켜진다.
+        lang = "en"
 
     # Step 2: 구 단위 방문자 지수 상속
     visit_idx = await _district_visit_index(db)

@@ -91,7 +91,8 @@
     "deleteConfirm": "注销",
     "deleteDone": "账户已注销",
     "cancel": "取消",
-    "privacy": "隐私政策"
+    "privacy": "隐私政策",
+    "terms": "服务条款"
   },
   "common": {
     "loading": "加载中...",

@@ -91,7 +91,8 @@
     "deleteConfirm": "탈퇴",
     "deleteDone": "탈퇴가 완료되었습니다",
     "cancel": "취소",
-    "privacy": "개인정보처리방침"
+    "privacy": "개인정보처리방침",
+    "terms": "이용약관"
   },
   "common": {
     "loading": "불러오는 중...",

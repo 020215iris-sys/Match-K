@@ -77,7 +77,7 @@
     "reasonUndiscovered": "A real hidden gem almost no one knows yet ✨",
     "reasonForeigners": "Quietly famous among travelers only!",
     "reasonDefault": "How about here today? I picked it for you!",
-    "cta": "See the way there",
+    "cta": "Details",
     "challenge": "View challenge"
   },
   "profile": {
@@ -92,7 +92,8 @@
     "deleteConfirm": "Delete",
     "deleteDone": "Your account has been deleted",
     "cancel": "Cancel",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
   },
   "common": {
     "loading": "Loading...",

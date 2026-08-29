@@ -13,6 +13,16 @@ from app.services.geo_utils import haversine_m
 MATCH_RADIUS_M = 150.0  # 서비스 간 좌표 오차 감안 (진단 후 조정)
 FOREIGN_LANGS = ("en", "ja", "zh")
 
+# 관광지 contentTypeId — 국문과 외국어 서비스가 체계가 다르다 (2026-08-26 실측).
+#   ko      : 12=관광지 (그 외 14 문화시설 · 15 축제 · 28 레포츠 · 32 숙박 · 38 쇼핑 · 39 음식점)
+#   en/ja/zh: 76=관광지 (그 외 75 · 78 · 79 · 80 · 82 · 85)
+#     └ EngService2에 76으로 조회하면 Haeundae Beach / Huinnyeoul Culture Village /
+#       Haedong Yonggungsa Temple 등 관광지만 나오는 것을 확인함.
+#   ⚠️ ko의 12를 외국어 서비스에 그대로 넘기면 응답이 0건이다. 실제로 그렇게 넣었다가
+#      등록부가 en/ja/zh 전부 0건이 되어 커버리지가 전멸했다(비대칭 18건 → 0건).
+#   ※ SURVEY_REPORT(7/13 실사)는 응답 필드명까지만 확정했고 이 타입 체계 차이는 기록이 없다.
+ATTRACTION_TYPE_ID = {"ko": 12, "en": 76, "ja": 76, "zh": 76}
+DEFAULT_ATTRACTION_TYPE_ID = 76
 
 def _coords(item: dict) -> tuple[float, float] | None:
     try:
@@ -26,14 +36,24 @@ def _title_similarity(a: str, b: str) -> float:
 
 
 async def build_lang_registry(lang: str, max_pages: int = 5) -> list[dict]:
-    """특정 언어 서비스에 등록된 부산 관광지 전체(상한 max_pages*100건)."""
+    """특정 언어 서비스에 등록된 부산 **관광지(타입12)** 전체(상한 max_pages*100건).
+
+    ▸ 2026-08-26: 관광지 타입 필터 추가. 국문 후보는 관광지만 뽑는데
+      (collect_candidates·mark_hidden·hidden_sim 모두 content_type_id=12)
+      외국어 등록부만 음식점·숙박까지 전부 받고 있었다. 매칭이 좌표 기반이라
+      국문 관광지가 150m 안의 외국어 '음식점'과 매칭돼 "그 언어권에 등록됨"으로
+      잘못 판정될 수 있었다.
+    """
     key = f"lang_registry:{lang}"
     cached = cache_get(long_cache, key)
     if cached is not None:
         return cached
+    ctype = ATTRACTION_TYPE_ID.get(tourapi_client.normalize_lang(lang),
+                                   DEFAULT_ATTRACTION_TYPE_ID)
     items: list[dict] = []
     for page in range(1, max_pages + 1):
-        batch = await tourapi_client.list_by_area(lang, page=page, use_long_cache=True)
+        batch = await tourapi_client.list_by_area(lang, page=page, content_type_id=ctype,
+                                                  use_long_cache=True)
         items.extend(batch)
         if len(batch) < 100:
             break
@@ -42,20 +62,29 @@ async def build_lang_registry(lang: str, max_pages: int = 5) -> list[dict]:
 
 
 def match_place(ko_item: dict, foreign_items: list[dict]) -> dict | None:
-    """국문 장소 1건을 외국어 리스트에서 좌표+명칭으로 매칭."""
+    """국문 장소 1건을 외국어 리스트에서 **좌표 거리 최소**로 매칭.
+
+    ▸ 2026-08-26: 명칭 유사도 제거. 국문 제목과 외국어 제목은 표기 체계가 달라
+      SequenceMatcher 유사도가 사실상 항상 0이다 (실측: '해운대해수욕장' vs
+      'Haeundae Beach' = 0.000, vs '海雲台海水浴場' = 0.000).
+      따라서 기존 score = 0.5 + 0.5*sim 는 언제나 0.5로 고정돼 아무 판별도 하지
+      않았고, best_score 초기값 0.0 탓에 **반경 안 첫 번째 항목**이 채택되고 있었다.
+      실제로 작동하는 신호는 좌표뿐이므로 가장 가까운 1건을 고른다(동점은 앞선 것).
+      ※ 유사도 하한(8/19 §13 제안 ②)은 적용하지 않는다 — sim이 0이라 하한을 걸면
+        모든 매칭이 사라져 커버리지가 전멸한다.
+    """
     ko_pos = _coords(ko_item)
     if ko_pos is None:
         return None
-    best, best_score = None, 0.0
+    best, best_dist = None, float("inf")
     for f in foreign_items:
         f_pos = _coords(f)
         if f_pos is None:
             continue
-        if haversine_m(*ko_pos, *f_pos) > MATCH_RADIUS_M:
+        d = haversine_m(*ko_pos, *f_pos)
+        if d > MATCH_RADIUS_M or d >= best_dist:
             continue
-        score = 0.5 + 0.5 * _title_similarity(ko_item.get("title", ""), f.get("title", ""))
-        if score > best_score:
-            best, best_score = f, score
+        best, best_dist = f, d
     return best
 
 

@@ -24,6 +24,7 @@ from sqlalchemy.orm import Session
 from app.core.config import DECLINING_SIGUNGU_CODES, LDONG_TO_SIGUNGU, get_settings
 from app.models import District, Landmark, Stamp
 from app.services import lang_mapping, tourapi_client, translator
+from app.services.geo_utils import haversine_m
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -31,12 +32,22 @@ settings = get_settings()
 # --- 가중치 (D7 [C] 튜닝) ---
 W_FOREIGN = 1.0    # 구 단위 외국인 방문 지수
 W_DOMESTIC = 0.8   # 구 단위 내국인 방문 지수 (낮을수록 가산)
-W_THIN = 1.2       # 언어권 커버리지 얇음 (방향 2)
+# 2026-08-26 D7 튜닝: 1.2 → 2.0. 점수 4항목 중 3개(FOREIGN·DOMESTIC·DECLINING)가 구 단위라
+# 같은 구 안에서는 이 항목만 순위를 가른다. 1.2에서는 구 점수(최대 2.4)에 눌려
+# 세 언어권 상위5가 15슬롯 중 7개 장소로 수렴했다(겹침 8).
+# 2.0으로 올리면 고유 13개(겹침 2)가 되면서 소멸위험 구 비율 60%는 그대로 유지된다.
+# ※ 2.4 + 쿼터 0.5 조합은 thin 적중률이 조금 오르지만 소멸위험 비율이 50%로 내려가
+#   공모전 취지를 깎는 교환이라 채택하지 않았다.
+# ※ W_DOMESTIC 제거(D0.0) 조합은 겹침 3으로 오히려 나빠서, "내국인이 적을수록 가산"
+#   방향은 유지하는 것으로 결론. (근거: app/scripts/tuning_report.py)
+W_THIN = 2.0       # 언어권 커버리지 얇음 (방향 2)
 W_DECLINING = 0.6  # 소멸위험 구 보너스 (nearby용)
 
 # auto 결과 중 소멸위험 구 최소 보장 비율 (팀 회의 조정 대상 — 1.0이면 기존 하드 필터와 동일)
 # 하드 필터의 문제: 소멸위험 구에 외국어 등록 장소가 없으면 언어별 차별화 재료가 사라짐
 DECLINING_QUOTA = 0.6
+# 같은 대상이 TourAPI에 여러 건으로 등록된 경우를 거를 때 쓰는 반경 (아래 _dedupe_same_place)
+DEDUPE_RADIUS_M = 100.0
 
 # TourAPI 장애 시 폴백: 프로세스 내 마지막 성공 응답 (한도 초과/일시 장애 대비)
 _last_good_raw: dict[str, list] = {}
@@ -121,6 +132,41 @@ async def _district_visit_index(db: Session) -> dict[int, dict[str, float]]:
             v[key] = v[key] / mx
     return agg
 
+def _dedupe_same_place(scored: list["Candidate"]) -> list["Candidate"]:
+    """같은 대상이 TourAPI에 여러 건으로 등록된 경우 상위 1건만 남긴다.
+
+    ▸ 2026-08-26 추가. '황령산'과 '황령산 전망대'가 좌표 0m·같은 구·같은 thinness라
+      점수까지 2.608로 동일해져, 영어권 auto/nearby 상위 5건 중 두 칸을 나란히 먹었다.
+      가중치로는 못 푸는 데이터 특성이라 정렬 후 별도 규칙으로 거른다.
+
+    판정 조건 — 둘 다 만족해야 중복으로 본다.
+      ① 좌표 거리 <= DEDUPE_RADIUS_M(100m)
+      ② 한쪽 국문 제목이 다른 쪽에 부분 문자열로 포함
+
+    ★ ②가 없으면 같은 자리의 서로 다른 시설(해수욕장과 관광안내소 등)까지 지워진다.
+    ★ ①이 없으면 엄연히 다른 곳이 묶인다. 2026-08-26 실측(후보 140건):
+        0m 황령산 | 황령산 전망대            ← 진짜 중복
+     1906m 금정산 | 금정산성마을 먹거리촌     ← 다른 곳
+     2804m 금정산 | 금정산성 동문            ← 다른 곳
+      제목 포함관계 3쌍 중 실제 중복은 0m짜리 하나뿐이었다.
+
+    ★ 제목 비교가 성립하는 건 이 시점에 아직 국문이기 때문이다 (Step 5 언어 스왑 전).
+
+    scored는 점수 내림차순 정렬 전제. 먼저 오는 쪽(점수·이미지·contentid 우선순위가
+    높은 쪽)을 남긴다.
+    """
+    kept: list["Candidate"] = []
+    for c in scored:
+        if any(
+            k.lat is not None and k.lng is not None
+            and c.lat is not None and c.lng is not None
+            and haversine_m(k.lat, k.lng, c.lat, c.lng) <= DEDUPE_RADIUS_M
+            and (c.title in k.title or k.title in c.title)
+            for k in kept
+        ):
+            continue
+        kept.append(c)
+    return kept
 
 def apply_declining_quota(scored: list["Candidate"], limit: int) -> list["Candidate"]:
     """소멸위험 구 최소 DECLINING_QUOTA 비율 보장 + 나머지 전체 점수순 (scored는 점수 내림차순 전제).
@@ -195,7 +241,15 @@ async def collect_candidates(
     fallback_key = "nearby" if rec_type == "nearby" else "auto"
     try:
         if rec_type == "nearby" and lat is not None and lng is not None:
-            raw = await tourapi_client.location_based("ko", lat, lng, rows=50, content_type_id=12)
+            # 반경 3km는 후보가 너무 적었다 (2026-08-26 실측: 부산 중심 기준 12건,
+            # 소멸위험 구 0건). 그래서 홈 카드에 "소멸위험 지역 재발견" 축이 아예 안 드러났고
+            # 가중치를 어떻게 바꿔도 순위가 안 흔들렸다(튜닝 5개 조합 결과가 전부 동일).
+            # 5km로 넓히면 28건 / 소멸위험 3건이 된다. 8km는 58건 / 10건으로 더 늘지만
+            # 부산 중심에서 8km는 사실상 부산 절반이라 "근처 추천" 컨셉에 안 맞아 제외.
+            # rows는 100으로 여유를 둔다 — 8km·rows=50에서 정확히 50으로 잘린 것을 확인했고,
+            # 관광지 밀집 지역(해운대 등)에서는 5km에서도 상한에 걸릴 수 있다.
+            raw = await tourapi_client.location_based("ko", lat, lng, radius_m=5000, rows=100,
+                                                      content_type_id=12)
         else:
             raw = []
             for page in (1, 2, 3):  # 관광지 타입 후보 최대 300건 (long cache라 콜 부담 적음)
@@ -244,7 +298,7 @@ async def score_and_rank(
           한국어 결과를 그대로 원하는 호출부는 preview_foreign=False를 줄 것.
        ② raw는 **국문** 원본이어야 한다. 외국어 서비스 응답을 넘기면
           coverage_by_contentid가 자기 언어 등록부와 자기를 대조해 thinness가 음수가 되고,
-          가중치 최대(W_THIN=1.2)인 언어 신호가 통째로 뒤집힌다.
+          가중치 최대(W_THIN=2.0)인 언어 신호가 통째로 뒤집힌다.
        ③ candidates의 contentid도 **국문 체계**여야 한다. TourAPI는 언어판마다 contentid가
           달라서, 외국어 contentid를 넘기면 DB(국문 기준)의 히든·도장 제외 필터가
           한 건도 안 걸린다 → 히든 장소가 결과에 그대로 노출된다.
@@ -252,7 +306,7 @@ async def score_and_rank(
     Args:
         raw: 후보의 TourAPI **국문** 원본 item 리스트 (위 ② 참고).
              ★ Step 3(lang_mapping.coverage_by_contentid)이 Candidate가 아니라 원본 dict를
-               요구해서 별도 인자로 받는다. 빈 리스트를 주면 커버리지 가산(W_THIN, 가중치 1.2로
+               요구해서 별도 인자로 받는다. 빈 리스트를 주면 커버리지 가산(W_THIN, 가중치 2.0으로
                가장 큼)이 통째로 빠져 "네 언어권엔 얇게 소개된 곳"이라는 차별화가 사라진다.
         candidates: 점수를 매길 대상. candidates_from_raw(raw)로 만들면 된다 (위 ③ 참고).
         user_lang: 정규화 전 원본 언어 코드(예: "ja-JP"). 내부에서 normalize 한다.
@@ -322,6 +376,8 @@ async def score_and_rank(
     scored.sort(key=lambda c: (-c.score,
                                not has_image.get(c.contentid, bool(c.image)),
                                c.contentid))
+    # 정렬 직후·쿼터 앞에서 중복 제거 — 쿼터가 중복된 장소로 칸을 채우지 않게 한다
+    scored = _dedupe_same_place(scored)
     use_quota = (rec_type == "auto") if apply_quota is None else apply_quota
     top = apply_declining_quota(scored, limit) if use_quota else scored[:limit]
 

@@ -77,7 +77,7 @@
     "reasonUndiscovered": "几乎没人知道的真正隐藏宝藏 ✨",
     "reasonForeigners": "只在旅行者之间悄悄出名的地方！",
     "reasonDefault": "今天来这里怎么样？我帮你选的！",
-    "cta": "查看路线",
+    "cta": "详细信息",
     "challenge": "查看挑战"
   },
   "profile": {
@@ -92,7 +92,8 @@
     "deleteConfirm": "注销",
     "deleteDone": "账户已注销",
     "cancel": "取消",
-    "privacy": "隐私政策"
+    "privacy": "隐私政策",
+    "terms": "服务条款"
   },
   "common": {
     "loading": "加载中...",

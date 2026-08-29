@@ -8,6 +8,9 @@
 // 취급해서 try/catch로 못 잡음. 그래서 이 패키지를 아예 import하기 "전에"
 // TurboModuleRegistry.get()(안 던지는 버전)으로 네이티브 모듈 존재 여부부터
 // 확인하고, 없으면 이 패키지 자체를 절대 불러오지 않도록 함.
+//
+// ⚠️ 2026-08-27 추가: 이용약관(TERMS_OF_SERVICE.md) 링크 추가 — 스토어 심사 요건
+// (개인정보처리방침과 동일하게 GitHub 파일 뷰 방식, public repo라 별도 호스팅 불필요).
 import * as WebBrowser from 'expo-web-browser';
 import React, { useEffect } from 'react';
 import { Alert, Pressable, StyleSheet, Text, TurboModuleRegistry, View } from 'react-native';
@@ -28,10 +31,12 @@ const LANGS: { code: AppLang; label: string }[] = [
 
 // 스토어 등록 URL과 동일하게 유지 (GitHub 파일 뷰 — public repo라 별도 호스팅 불필요)
 const PRIVACY_POLICY_URL = 'https://github.com/020215iris-sys/Match-K/blob/main/PRIVACY_POLICY.md';
+const TERMS_OF_SERVICE_URL = 'https://github.com/020215iris-sys/Match-K/blob/main/TERMS_OF_SERVICE.md';
 
 // TurboModuleRegistry.get()은 getEnforcing()과 달리 없어도 안 던지고 null 반환 —
 // 이걸로 먼저 확인해야 google-signin 패키지를 아예 안 불러올 수 있음(Expo Go 대응).
 const isGoogleSignInAvailable = () => TurboModuleRegistry.get('RNGoogleSignin') != null;
+
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
@@ -128,6 +133,13 @@ export default function ProfileScreen() {
         onPress={() => WebBrowser.openBrowserAsync(PRIVACY_POLICY_URL)}
       >
         <Text style={styles.linkText}>{t('profile.privacy')}</Text>
+      </Pressable>
+
+      <Pressable
+        style={styles.linkRow}
+        onPress={() => WebBrowser.openBrowserAsync(TERMS_OF_SERVICE_URL)}
+      >
+        <Text style={styles.linkText}>{t('profile.terms')}</Text>
       </Pressable>
 
       <Pressable

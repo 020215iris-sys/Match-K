@@ -51,18 +51,24 @@ async def search(q: str, lang: str = "en", lat: float | None = None, lng: float 
 async def search_by_category(category: str, lang: str = "en", db: Session = Depends(get_db)):
     """카테고리 칩 탭 시 결과 — TourAPI 실시간 검색 + 역추천 점수 재사용 (새봄의
     recommender.score_and_rank, 2026-08-19 분리) 그대로 씀. apply_quota=True로
-    소멸위험 구를 항상 우선 노출 (공모전 취지 반영 — 검색에도 컨셉이 묻어나게)."""
+    소멸위험 구를 항상 우선 노출 (공모전 취지 반영 — 검색에도 컨셉이 묻어나게).
+
+    ⚠️ 2026-08-29: 후보 수집(TourAPI 검색)은 항상 국문(ko)으로 고정 — 국문 데이터가
+    외국어보다 훨씬 많아서, 외국어로 검색해도 국문 기준 전체 후보를 다 확보하기 위함.
+    표시 언어는 그 뒤 score_and_rank()의 Step 5가 처리 — 그 언어권 공식 등록판이 있으면
+    그걸로 바꾸고, 없으면 Papago로 자동 번역해서 채워줌(lang_mapping.py + translator.py).
+    이러면 언어권마다 결과 개수가 들쭉날쭉하던 문제도 같이 해결됨."""
     cat = category_dictionary.CATEGORIES.get(category)
     if cat is None:
         raise HTTPException(404, "unknown_category")
-    keyword = cat["keyword"].get(lang, cat["keyword"]["en"])
-    # 카테고리에 따라 키워드가 문자열 하나(기존)이거나 리스트(여러 개 합치기, 신규)일 수 있음 —
+    keyword = cat["keyword"]
+    # 카테고리에 따라 키워드가 문자열 하나(기존)이거나 리스트(여러 개 합치기)일 수 있음 —
     # 리스트면 각각 검색해서 결과를 contentid 기준으로 중복 없이 합침 (2026-08-25, 사찰부터 적용).
     keywords = keyword if isinstance(keyword, list) else [keyword]
     raw: list[dict] = []
     seen_ids: set[str] = set()
     for kw in keywords:
-        items = await tourapi_client.search_by_keyword(lang, kw, rows=30)
+        items = await tourapi_client.search_by_keyword("ko", kw, rows=30)
         for item in items:
             cid = item.get("contentid")
             if cid and cid not in seen_ids:

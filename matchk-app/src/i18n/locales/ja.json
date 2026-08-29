@@ -77,7 +77,7 @@
     "reasonUndiscovered": "まだ誰も知らない本物の隠れた名所だよ ✨",
     "reasonForeigners": "旅行者の間だけで静かに人気の場所だよ！",
     "reasonDefault": "今日はここはどう？私が選んでみたよ！",
-    "cta": "行き方を見る",
+    "cta": "詳細情報",
     "challenge": "チャレンジを見る"
   },
   "profile": {
@@ -92,7 +92,8 @@
     "deleteConfirm": "退会する",
     "deleteDone": "退会が完了しました",
     "cancel": "キャンセル",
-    "privacy": "プライバシーポリシー"
+    "privacy": "プライバシーポリシー",
+    "terms": "利用規約"
   },
   "common": {
     "loading": "読み込み中...",

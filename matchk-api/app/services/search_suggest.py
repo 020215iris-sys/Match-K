@@ -31,7 +31,10 @@ search_suggestion_cache 테이블에 언어별로 저장해두고, get_suggestio
 """
 import json
 import random
-from datetime import date
+from datetime import datetime
+from zoneinfo import ZoneInfo
+
+_KST = ZoneInfo("Asia/Seoul")  # 배포 서버(Railway 등)가 UTC일 수 있어서 명시적으로 한국시간 고정
 
 from sqlalchemy.orm import Session
 
@@ -224,8 +227,12 @@ def get_suggestions(lang: str, db: Session) -> list[dict[str, str]]:
     실제 생성은 배치 스크립트(scripts/generate_search_suggestions.py)가 미리 해둔다.
     2026-08-24부터: 언어당 여러 달(month)치를 미리 저장해둘 수 있어서, "오늘이 몇 월인지"
     보고 그 달 행을 골라 읽는다 (예: 9월 1일이 되면 자동으로 9월 행을 읽기 시작함 —
-    스케줄러 없이도 날짜만으로 자동 전환됨). 그 달 것도 없으면 FALLBACK_SAMPLES로 대체."""
-    month = date.today().month
+    스케줄러 없이도 날짜만으로 자동 전환됨). 그 달 것도 없으면 FALLBACK_SAMPLES로 대체.
+
+    ⚠️ 2026-08-29: "오늘"은 항상 한국 시간(KST) 기준 — 서버(Railway)가 UTC로 배포되면
+    date.today()가 서버 시간대를 따라가서 9월 1일 전환이 최대 9시간 늦어질 수 있어서,
+    명시적으로 Asia/Seoul을 지정함."""
+    month = datetime.now(_KST).month
     row = db.query(SearchSuggestionCache).filter_by(lang=lang, month=month).first()
     if row is not None:
         return row.items

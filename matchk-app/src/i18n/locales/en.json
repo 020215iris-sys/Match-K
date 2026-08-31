@@ -21,9 +21,10 @@
   "map": {
     "title": "Achievement Map",
     "progress": "My collection {{stamped}} / Busan total {{total}}",
-    "tapBusan": "Tap Busan to view by district",
+    "tapBusan": "Tap a district for details",
     "hiddenReady": "A hidden stamp is available!",
-    "hiddenBannerHint": "Tap to view"
+    "hiddenBannerHint": "Tap to view",
+    "viewAsList": "View as list"
   },
   "scheduler": {
     "title": "Scheduler",

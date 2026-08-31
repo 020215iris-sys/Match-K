@@ -21,9 +21,10 @@
   "map": {
     "title": "成就地图",
     "progress": "我的收藏 {{stamped}} / 釜山全部 {{total}}",
-    "tapBusan": "点击釜山按区查看",
+    "tapBusan": "点击行政区查看详情",
     "hiddenReady": "可以获得隐藏印章！",
-    "hiddenBannerHint": "点击查看"
+    "hiddenBannerHint": "点击查看",
+    "viewAsList": "查看列表"
   },
   "scheduler": {
     "title": "行程助手",

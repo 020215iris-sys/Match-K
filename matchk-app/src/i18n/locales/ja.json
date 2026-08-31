@@ -21,9 +21,10 @@
   "map": {
     "title": "実績マップ",
     "progress": "マイコレクション {{stamped}} / 釜山全体 {{total}}",
-    "tapBusan": "釜山をタップして区ごとに表示",
+    "tapBusan": "区をタップして詳細を見る",
     "hiddenReady": "隠れスタンプを獲得できます！",
-    "hiddenBannerHint": "タップして確認"
+    "hiddenBannerHint": "タップして確認",
+    "viewAsList": "リストで見る"
   },
   "scheduler": {
     "title": "スケジューラー",

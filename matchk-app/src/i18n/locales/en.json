@@ -21,8 +21,10 @@
   "map": {
     "title": "Achievement Map",
     "progress": "My collection {{stamped}} / Busan total {{total}}",
-    "tapBusan": "Tap Busan to view by district",
-    "hiddenReady": "A hidden stamp is available!"
+    "tapBusan": "Tap a district for details",
+    "hiddenReady": "A hidden stamp is available!",
+    "hiddenBannerHint": "Tap to view",
+    "viewAsList": "View as list"
   },
   "scheduler": {
     "title": "Scheduler",
@@ -64,7 +66,7 @@
   },
   "hidden": {
     "encounterTitle": "Hidden spot found!",
-    "encounterSub": "A Busan hidden gem, unknown in your language, is nearby",
+    "encounterSub": "You unlocked this hidden spot by completing this district's stamps",
     "collect": "Collect hidden stamp",
     "later": "Later",
     "discovered": "{{count}} hidden found"

@@ -1,6 +1,7 @@
-/** 업적지도 ② 구지도 (신규, 2026-07-31 개편) — 부산이 구별로 쪼개진 지도.
- *  지금은 구 그리드(진행률만큼 색칠 게이지)로 플레이스홀더. 구 탭 → 구 상세(③).
- *  TODO(현표): 실제 구별 지도 이미지/폴리곤으로 교체. */
+/** 업적지도 ② 목록 보기 (2026-08 개편) — 실제 지도(①)의 대안 화면.
+ *  ①에서 구 타일을 직접 탭하면 바로 구 상세(③)로 가지만, 지도보다 목록으로
+ *  쭉 훑어보고 싶은 사람을 위해 "리스트로 보기" 링크로 여기 들어올 수 있게 남겨둠.
+ *  진행률 게이지 있는 2열 그리드. 구 탭 → 구 상세(③)로 가는 흐름은 그대로. */
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';

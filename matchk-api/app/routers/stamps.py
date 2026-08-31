@@ -75,12 +75,15 @@ def progress(district: int | None = None, db: Session = Depends(get_db), user: U
 @router.get("/district/{sigungu_code}")
 def district_status(sigungu_code: int, db: Session = Depends(get_db),
                     user: User = Depends(get_current_user)):
-    """업적지도 3페이지용 — 그 구의 도장 상태 + 히든 발동(구별 비율) 여부.
+    """업적지도 3페이지용 — 그 구의 도장 상태 + 히든 발동(구별 비율) 여부 + 팝업 대상.
 
     - stampedContentIds: 앱이 구 관광지 리스트(실시간)와 대조해 찍힘/빈칸 표시
     - hiddenReady: 구 도장 비율 >= 임계값 → 히든 팝업 발동 가능
       (⚠️ 구별 기준 — config HIDDEN_STAMP_THRESHOLD 임시값. 팀 회의로 구 단위 재정의 예정)
-    TODO(현표): 히든 후보 장소 선정·팝업 대상 contentid 지정 로직.
+    - hiddenTargetContentId: 히든 팝업에 띄울 대상 1곳(HiddenEncounterPopup).
+      hiddenReady일 때만 값이 있고, 이 구의 히든을 전부 수집했거나 히든이 아예 없는 구면 null.
+      선정 기준: id 순 첫 후보 — 같은 유저가 새로고침해도 팝업 대상이 안 바뀌도록 결정적으로 고른다.
+      (GPS 근접 판정 없음 — 2026-08 개편으로 구 비율 달성 자체가 트리거)
     """
     district = db.query(District).filter(District.sigungu_code == sigungu_code).first()
     if district is None:
@@ -94,10 +97,23 @@ def district_status(sigungu_code: int, db: Session = Depends(get_db),
     stamped = [cid for cid, is_hidden in rows if not is_hidden]
     hidden_stamped = [cid for cid, is_hidden in rows if is_hidden]
     progress = round(len(stamped) / total, 3) if total else 0.0
+    hidden_ready = progress >= settings.HIDDEN_STAMP_THRESHOLD
+
+    hidden_target = None
+    if hidden_ready:
+        first_candidate = (db.query(Landmark.contentid)
+                            .filter(Landmark.district_id == district.id, Landmark.is_active,
+                                    Landmark.is_hidden.is_(True),
+                                    ~Landmark.contentid.in_(hidden_stamped))
+                            .order_by(Landmark.id)
+                            .first())
+        hidden_target = first_candidate[0] if first_candidate else None
+
     return {
         "sigunguCode": sigungu_code,
         "stampedContentIds": stamped,
         "hiddenStampedContentIds": hidden_stamped,
         "progress": progress,
-        "hiddenReady": progress >= settings.HIDDEN_STAMP_THRESHOLD,
+        "hiddenReady": hidden_ready,
+        "hiddenTargetContentId": hidden_target,
     }

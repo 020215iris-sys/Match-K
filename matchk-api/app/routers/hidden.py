@@ -1,79 +1,32 @@
-"""히든 미션 API (신규) — 포켓몬 고식 위치기반 조우.
+"""히든 미션 API — 발견 현황 조회 전용 (2026-08 개편: GPS 근접 → 구별 비율 트리거).
 
-컨셉: 일반 도장판과 별개. 조건(지도%+스탬프%) 충족 시 잠금 해제되고,
-사용자가 소멸위험 구의 '숨은 장소' 근처를 지나가면 조우 팝업 등장.
-
-⚠️ 위치정보보호법: 서버는 히든 장소 좌표만 내려주고, 근접 판정은 앱이 단말기 내에서 수행한다.
-   사용자 GPS는 서버로 전송되지 않는다 (도장 API와 동일 원칙).
+⚠️ 히든 발동 조건·팝업 대상 지정은 이제 이 파일이 아니라 stamps.py `district_status`가 담당한다.
+   그 구의 도장 비율이 임계값(HIDDEN_STAMP_THRESHOLD)을 넘으면 hiddenReady=true가 되고,
+   같은 응답의 hiddenTargetContentId로 팝업에 띄울 장소까지 지정된다.
+   (기존 방식 — 부산 전체 비율로 통합 잠금 해제 후 GPS 근접 감지로 조우 — 는 폐기.
+    프론트도 useHiddenEncounter가 더 이상 위치를 읽지 않는다.)
+⚠️ 위치정보보호법: 이 파일은 애초에 좌표를 다루지 않는다(히든 좌표 배포 API 자체를 제거).
 ⚠️ 총 개수 비공개: 사용자에겐 '발견한 수'만 보여주고 전체 히든 수는 알려주지 않는다.
 """
 from fastapi import APIRouter, Depends
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from app.core.config import get_settings
 from app.core.database import get_db
 from app.core.security import get_current_user
-from app.models import District, Landmark, Stamp
+from app.models import Stamp
 from app.models.user import User
 
 router = APIRouter(prefix="/api/hidden", tags=["hidden"])
-settings = get_settings()
-
-
-def _map_and_stamp_progress(db: Session, user_id: int) -> tuple[float, float]:
-    """일반 도장판 기준 (지도 색칠 비율, 스탬프 수집 비율). 히든 제외."""
-    total = db.query(func.count(Landmark.id)).filter(
-        Landmark.is_active, Landmark.is_hidden.is_(False)).scalar() or 0
-    if total == 0:
-        return 0.0, 0.0
-    stamped = (db.query(func.count(Stamp.id))
-               .join(Landmark, Landmark.id == Stamp.landmark_id)
-               .filter(Stamp.user_id == user_id, Landmark.is_hidden.is_(False)).scalar() or 0)
-    stamp_ratio = stamped / total
-    # 지도 색칠 비율 = 도장이 하나라도 있는 구 / 전체 구
-    total_districts = db.query(func.count(District.id)).scalar() or 0
-    painted = (db.query(func.count(func.distinct(Landmark.district_id)))
-               .join(Stamp, (Stamp.landmark_id == Landmark.id) & (Stamp.user_id == user_id))
-               .filter(Landmark.is_hidden.is_(False)).scalar() or 0)
-    map_ratio = painted / total_districts if total_districts else 0.0
-    return map_ratio, stamp_ratio
 
 
 @router.get("/status")
 def hidden_status(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """히든 잠금 해제 여부 + 발견 개수(총 개수는 비공개)."""
-    map_ratio, stamp_ratio = _map_and_stamp_progress(db, user.id)
-    unlocked = (map_ratio >= settings.HIDDEN_MAP_THRESHOLD
-                and stamp_ratio >= settings.HIDDEN_STAMP_THRESHOLD)
+    """지금까지 발견한 히든 도장 개수만 반환한다 (전체 히든 개수는 비공개).
+
+    잠금/해제 개념은 이제 구 단위(stamps.py district_status)라 여기엔 없다 —
+    이 엔드포인트는 프로필 등에서 "히든 N곳 발견" 배지를 보여줄 때 쓴다.
+    """
     discovered = (db.query(func.count(Stamp.id))
                   .filter(Stamp.user_id == user.id, Stamp.is_hidden.is_(True)).scalar() or 0)
-    return {
-        "unlocked": unlocked,
-        "mapProgress": round(map_ratio, 3),
-        "stampProgress": round(stamp_ratio, 3),
-        "mapThreshold": settings.HIDDEN_MAP_THRESHOLD,
-        "stampThreshold": settings.HIDDEN_STAMP_THRESHOLD,
-        "discovered": discovered,  # 발견 개수만 (총 개수 비공개)
-    }
-
-
-@router.get("/landmarks")
-def hidden_landmarks(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
-    """근접 판정용 히든 장소 좌표 목록. 잠금 전이면 빈 목록.
-
-    좌표만 내려주고 이름/콘텐츠는 주지 않음 — 조우(근접) 시 앱이 상세 API로 별도 조회.
-    앱이 이 좌표들과 현재 위치를 단말기 내에서 비교해 조우를 판정한다.
-    """
-    map_ratio, stamp_ratio = _map_and_stamp_progress(db, user.id)
-    if not (map_ratio >= settings.HIDDEN_MAP_THRESHOLD
-            and stamp_ratio >= settings.HIDDEN_STAMP_THRESHOLD):
-        return {"items": [], "unlocked": False}
-    # 이미 발견(도장)한 히든은 제외
-    collected = {row[0] for row in db.query(Stamp.landmark_id)
-                 .filter(Stamp.user_id == user.id, Stamp.is_hidden.is_(True)).all()}
-    rows = (db.query(Landmark)
-            .filter(Landmark.is_active, Landmark.is_hidden.is_(True)).all())
-    items = [{"contentid": lm.contentid, "lat": lm.mapy, "lng": lm.mapx}
-             for lm in rows if lm.id not in collected]
-    return {"items": items, "unlocked": True}
+    return {"discovered": discovered}

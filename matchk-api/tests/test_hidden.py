@@ -1,32 +1,35 @@
-"""히든 미션 테스트 — 별도 컬렉션 + 잠금 조건 + 진행률 분리."""
+"""히든 미션 테스트 — 구별 도장 비율 트리거 + 발견 현황 (2026-08 개편)."""
 from fastapi.testclient import TestClient
 
 from app.core.database import Base, SessionLocal, engine
 from app.main import app
-from app.models import Country, District, Landmark, Region, Stamp
+from app.models import Country, District, Landmark, Region
 
 client = TestClient(app)
+
+# 다른 테스트 모듈과 in-memory DB를 공유하므로 sigungu_code는 여기서만 쓰는 값(99)으로 격리
+HIDDEN_TEST_SIGUNGU = 99
 
 
 def setup_module():
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
-    # 다른 테스트 모듈과 in-memory DB를 공유할 수 있어 get-or-create로 충돌 방지
     kr = db.query(Country).filter_by(code="KR").first() or Country(code="KR", name_ko="한국")
     db.add(kr); db.flush()
     busan = db.query(Region).filter_by(tour_area_code=6).first() \
         or Region(country_id=kr.id, tour_area_code=6, name_ko="부산광역시")
     db.add(busan); db.flush()
-    # 일반 구(도장판) + 소멸위험 구(히든)
-    nam = District(region_id=busan.id, sigungu_code=4, name_ko="남구", name_en="Nam-gu", is_declining=False)
-    dong = District(region_id=busan.id, sigungu_code=5, name_ko="동구", name_en="Dong-gu", is_declining=True)
-    db.add_all([nam, dong]); db.flush()
-    # 일반 도장판 랜드마크 4개 (남구)
-    for i in range(4):
-        db.add(Landmark(contentid=f"normal-{i}", district_id=nam.id, mapx=129.06, mapy=35.14, is_hidden=False))
-    # 히든 랜드마크 2개 (동구)
-    db.add(Landmark(contentid="hidden-0", district_id=dong.id, mapx=129.04, mapy=35.13, is_hidden=True))
-    db.add(Landmark(contentid="hidden-1", district_id=dong.id, mapx=129.05, mapy=35.12, is_hidden=True))
+    gu = db.query(District).filter_by(sigungu_code=HIDDEN_TEST_SIGUNGU).first() \
+        or District(region_id=busan.id, sigungu_code=HIDDEN_TEST_SIGUNGU,
+                    name_ko="히든테스트구", name_en="Hidden-gu", is_declining=True)
+    db.add(gu); db.flush()
+    if not db.query(Landmark).filter_by(contentid="h-normal-0").first():
+        # 일반 도장판 4개 + 히든 2개 (구 하나에 몰아넣고 비율로 트리거 확인)
+        for i in range(4):
+            db.add(Landmark(contentid=f"h-normal-{i}", district_id=gu.id,
+                             mapx=129.04, mapy=35.13, is_hidden=False))
+        db.add(Landmark(contentid="h-hidden-0", district_id=gu.id, mapx=129.04, mapy=35.13, is_hidden=True))
+        db.add(Landmark(contentid="h-hidden-1", district_id=gu.id, mapx=129.05, mapy=35.12, is_hidden=True))
     db.commit(); db.close()
 
 
@@ -38,40 +41,46 @@ def _headers(tok=None):
     return {"Authorization": f"Bearer {tok or _token()}"}
 
 
-def test_progress_excludes_hidden():
-    # 남구(4)는 일반 4건 노출 / 동구(5)는 히든뿐이라 진행률에서 사라짐 (in-memory DB 공유 대비 구별 검증)
+def test_hidden_not_ready_before_threshold():
     h = _headers()
-    nam = client.get("/api/stamps/progress?district=4", headers=h).json()
-    assert nam["districts"][0]["total"] == 4
-    dong = client.get("/api/stamps/progress?district=5", headers=h).json()
-    assert dong["districts"] == []  # 히든만 있는 구는 도장판에서 제외
+    status = client.get(f"/api/stamps/district/{HIDDEN_TEST_SIGUNGU}", headers=h).json()
+    assert status["hiddenReady"] is False
+    assert status["hiddenTargetContentId"] is None
 
 
-def test_hidden_locked_by_default():
+def test_hidden_ready_and_target_after_threshold():
     h = _headers()
-    s = client.get("/api/hidden/status", headers=h).json()
-    assert s["unlocked"] is False        # 도장 0개 → 잠김
-    assert s["discovered"] == 0
-    assert "total" not in s              # 총 개수 비공개
-    # 잠금 상태에선 히든 좌표도 안 줌
-    assert client.get("/api/hidden/landmarks", headers=h).json()["items"] == []
+    # HIDDEN_STAMP_THRESHOLD 기본값 0.30 → 일반 4개 중 2개(50%)면 충족
+    client.post("/api/stamps", headers=h, json={"contentid": "h-normal-0"})
+    client.post("/api/stamps", headers=h, json={"contentid": "h-normal-1"})
+    status = client.get(f"/api/stamps/district/{HIDDEN_TEST_SIGUNGU}", headers=h).json()
+    assert status["hiddenReady"] is True
+    assert status["hiddenTargetContentId"] == "h-hidden-0"  # id 순 첫 후보 — 결정적
 
 
-def test_hidden_unlocks_and_collects():
-    tok = _token(); h = _headers(tok)
-    # 일반 도장판 4개 다 찍어 잠금 해제 (map 100%, stamp 100% > 임계값)
-    for i in range(4):
-        assert client.post("/api/stamps", headers=h, json={"contentid": f"normal-{i}"}).status_code == 201
-    s = client.get("/api/hidden/status", headers=h).json()
-    assert s["unlocked"] is True
-    # 해제되면 히든 좌표 제공
-    items = client.get("/api/hidden/landmarks", headers=h).json()["items"]
-    assert len(items) == 2
-    # 히든 도장 수집 → is_hidden 컬렉션에 쌓이고 discovered 증가
-    r = client.post("/api/stamps", headers=h, json={"contentid": "hidden-0"})
+def test_hidden_collect_via_target_then_moves_to_next():
+    h = _headers()
+    client.post("/api/stamps", headers=h, json={"contentid": "h-normal-0"})
+    client.post("/api/stamps", headers=h, json={"contentid": "h-normal-1"})
+    status = client.get(f"/api/stamps/district/{HIDDEN_TEST_SIGUNGU}", headers=h).json()
+    target = status["hiddenTargetContentId"]
+
+    # 팝업 "수집" = 대상 contentid로 그냥 도장 API 호출 (GPS 재검증 없음 — 화면 내 팝업 자체가 트리거)
+    r = client.post("/api/stamps", headers=h, json={"contentid": target})
     assert r.status_code == 201 and r.json()["isHidden"] is True
-    s2 = client.get("/api/hidden/status", headers=h).json()
-    assert s2["discovered"] == 1
-    # 히든 도장은 일반 진행률(이 유저)을 바꾸지 않음 — 남구 4개만 반영, 히든 제외
-    nam = client.get("/api/stamps/progress?district=4", headers=_headers(tok)).json()
-    assert nam["districts"][0]["stamped"] == 4
+
+    status2 = client.get(f"/api/stamps/district/{HIDDEN_TEST_SIGUNGU}", headers=h).json()
+    assert status2["hiddenTargetContentId"] not in (None, target)  # 남은 히든으로 자동 전환
+
+    s = client.get("/api/hidden/status", headers=h).json()
+    assert s["discovered"] == 1
+    assert "total" not in s  # 총 개수 비공개
+
+
+def test_hidden_target_null_when_all_collected():
+    h = _headers()
+    for cid in ("h-normal-0", "h-normal-1", "h-hidden-0", "h-hidden-1"):
+        client.post("/api/stamps", headers=h, json={"contentid": cid})
+    status = client.get(f"/api/stamps/district/{HIDDEN_TEST_SIGUNGU}", headers=h).json()
+    assert status["hiddenReady"] is True
+    assert status["hiddenTargetContentId"] is None  # 이 구의 히든을 전부 수집함

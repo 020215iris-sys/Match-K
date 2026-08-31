@@ -21,8 +21,10 @@
   "map": {
     "title": "업적지도",
     "progress": "내 컬렉션 {{stamped}} / 부산 전체 {{total}}",
-    "tapBusan": "부산을 눌러 구별로 보기",
-    "hiddenReady": "히든 도장을 찍을 수 있어요!"
+    "tapBusan": "구를 눌러 자세히 보기",
+    "hiddenReady": "히든 도장을 찍을 수 있어요!",
+    "hiddenBannerHint": "눌러서 확인하기",
+    "viewAsList": "리스트로 보기"
   },
   "scheduler": {
     "title": "스케줄러",
@@ -64,7 +66,7 @@
   },
   "hidden": {
     "encounterTitle": "숨은 곳 발견!",
-    "encounterSub": "당신 언어권엔 알려지지 않은 부산의 히든 스팟이 근처에 있어요",
+    "encounterSub": "이 구의 도장을 다 모아서 나타난 히든 스팟이에요",
     "collect": "히든 도장 획득",
     "later": "나중에",
     "discovered": "히든 {{count}}곳 발견"

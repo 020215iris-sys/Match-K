@@ -87,10 +87,24 @@ export default function DistrictLandmarksScreen() {
         setHiddenReady(status?.hiddenReady ?? false);
         setHiddenTargetId(status?.hiddenTargetContentId ?? null);
 
-        // ── 포그라운드 원샷 GPS 자동 도장 ───────────────────────
-        // 위치를 딱 한 번 읽어, 근처(<반경) 안 찍힌 장소를 자동으로 찍는다.
-        // 거리 계산은 단말기 내에서만 (위치정보보호법). 백그라운드 추적 없음.
-        if (!DEMO_STAMP) {
+        if (DEMO_STAMP) {
+          // ── 시연 모드: GPS 없이 이 구 관광지를 전부 즉시 도장 ──────
+          // 부산 밖에서 발표/테스트할 때용 (EXPO_PUBLIC_DEMO_STAMP=true).
+          // 위치를 아예 안 읽으니 위치정보 이슈 자체가 없음.
+          for (const it of list.items) {
+            if (stamped.has(it.contentid)) continue;
+            try {
+              await endpoints.createStamp(it.contentid);
+              stamped.add(it.contentid);
+              if (active) setJustStampedId(it.contentid);
+            } catch {
+              /* 이미 찍혔거나 seed에 없는 장소 — 무시 */
+            }
+          }
+        } else {
+          // ── 포그라운드 원샷 GPS 자동 도장 ───────────────────────
+          // 위치를 딱 한 번 읽어, 근처(<반경) 안 찍힌 장소를 자동으로 찍는다.
+          // 거리 계산은 단말기 내에서만 (위치정보보호법). 백그라운드 추적 없음.
           try {
             const { status: perm } = await Location.requestForegroundPermissionsAsync();
             if (perm === 'granted') {

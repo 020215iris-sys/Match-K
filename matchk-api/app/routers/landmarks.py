@@ -53,12 +53,46 @@ def _normalize_related(rows: list[dict], base_title: str | None) -> list[dict]:
     return out[:20]
 
 
+async def _localize_items(items: list[dict], lang: str) -> list[dict]:
+    """국문 raw 리스트를 다른 언어로 표시 — 공식 등록판 있으면 그걸로, 없으면 Papago 번역
+    (recommender.py Step 5와 같은 패턴). contentid는 항상 국문 그대로 유지 — 도장 시스템
+    (Landmark 테이블)이 국문 contentid로 시드돼있어서, 다른 값으로 바꾸면 도장이 안 찍힘."""
+    if lang not in lang_mapping.FOREIGN_LANGS:
+        return items
+    try:
+        registry = await lang_mapping.build_lang_registry(lang)
+    except Exception:
+        registry = []
+    out = []
+    for item in items:
+        new_item = dict(item)
+        if registry and item.get("mapy") and item.get("mapx"):
+            matched = lang_mapping.match_place(item, registry)
+            if matched is not None:
+                new_item["title"] = matched.get("title") or item.get("title")
+                new_item["firstimage"] = (matched.get("firstimage") or matched.get("firstimage2")
+                                          or item.get("firstimage"))
+                out.append(new_item)
+                continue
+        tr = await translator.translate(item.get("title"), lang)
+        if tr:
+            new_item["title"] = tr
+        out.append(new_item)
+    return out
+
+
 @router.get("")
 async def list_landmarks(district: int | None = Query(None, description="TourAPI sigunguCode"),
                          type: int | None = Query(None, description="contentTypeId (12=관광지)"),
                          lang: str = "en", db: Session = Depends(get_db)):
-    """시/구별 랜드마크 리스트 — 콘텐츠는 실시간 호출. type=12면 도장 대상만."""
-    items = await tourapi_client.list_by_area(lang, sigungu_code=district, content_type_id=type)
+    """시/구별 랜드마크 리스트 — 콘텐츠는 실시간 호출. type=12면 도장 대상만.
+
+    ⚠️ 2026-09-02: 조회는 항상 국문(ko)으로 고정 — ⓐ 국문 데이터가 훨씬 많아서 외국어로
+    직접 검색하면 결과가 텅 비는 경우가 많고(예: 일본어 수영구 0건), ⓑ 도장 시스템이 국문
+    contentid 기준이라 외국어 서비스의 contentid로는 도장 자체가 안 찍힘. 표시 언어는
+    _localize_items()가 공식 등록판/Papago로 맞춰줌 (search.py의 카테고리 검색과 같은 패턴)."""
+    items = await tourapi_client.list_by_area("ko", sigungu_code=district, content_type_id=type)
+    items = await _localize_items(items, lang)
     return {"items": items, "count": len(items)}
 
 

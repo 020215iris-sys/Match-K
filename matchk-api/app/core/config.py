@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # Papago 번역 (네이버클라우드) — 외국어판 없는 곳의 폴백 번역. 미설정 시 번역 스킵.
     PAPAGO_CLIENT_ID: str = ""
     PAPAGO_CLIENT_SECRET: str = ""
+    # 월별 과금 상한 (2026-09-02, 청구 폭탄 방지) — NCP 요금표: 100만자당 20,000원 계단식.
+    # 기본값 100만자 = 월 최대 2만원. 초과 시 Papago 호출 스킵(원문 유지, translator.py).
+    PAPAGO_MONTHLY_CHAR_CAP: int = 1_000_000
 
     # Claude API — 검색 AI 추천어 생성 (search_suggest.py). 미설정 시 고정 샘플로 폴백.
     ANTHROPIC_API_KEY: str = ""

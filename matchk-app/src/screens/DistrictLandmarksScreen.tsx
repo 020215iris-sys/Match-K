@@ -23,6 +23,18 @@ import { colors } from '@/theme/colors';
 // 시연 빌드에서만 true (GPS 없이 도장 시연 — 부산 외 발표 대비)
 const DEMO_STAMP = process.env.EXPO_PUBLIC_DEMO_STAMP === 'true';
 
+// GPS 응답이 안 올 때 무한 대기하지 않도록 제한시간 (2026-08-29, 재진입 시 무한로딩 버그 수정)
+const GPS_TIMEOUT_MS = 5000;
+
+function getCurrentPositionWithTimeout(timeoutMs: number) {
+  return Promise.race([
+    Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
+    new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('gps_timeout')), timeoutMs);
+    }),
+  ]);
+}
+
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 type DistrictRoute = RouteProp<RootStackParamList, 'DistrictLandmarks'>;
 
@@ -65,6 +77,7 @@ export default function DistrictLandmarksScreen() {
   const [justStampedId, setJustStampedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [gpsNotice, setGpsNotice] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
   const hidden = useHiddenEncounter({ hiddenReady, targetContentId: hiddenTargetId });
@@ -73,6 +86,7 @@ export default function DistrictLandmarksScreen() {
     let active = true;
     setLoading(true);
     setError(null);
+    setGpsNotice(false);
 
     (async () => {
       try {
@@ -108,7 +122,7 @@ export default function DistrictLandmarksScreen() {
           try {
             const { status: perm } = await Location.requestForegroundPermissionsAsync();
             if (perm === 'granted') {
-              const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High });
+              const pos = await getCurrentPositionWithTimeout(GPS_TIMEOUT_MS);
               for (const it of list.items) {
                 if (stamped.has(it.contentid) || !it.mapx || !it.mapy) continue;
                 const d = haversineM(
@@ -125,7 +139,9 @@ export default function DistrictLandmarksScreen() {
               }
             }
           } catch {
-            /* GPS 실패 — 자동 도장 생략 */
+            // GPS 실패/타임아웃 — 무한 대기 대신 여기서 끊고 화면은 정상 표시.
+            // "다시 시도" 버튼으로 재조회(reloadKey)하면 GPS도 같이 재시도됨.
+            if (active) setGpsNotice(true);
           }
         }
         if (active) setStampedIds(stamped);
@@ -154,6 +170,15 @@ export default function DistrictLandmarksScreen() {
       <View style={styles.mapArea}>
         <Text style={styles.mapEmoji}>📍 {name}</Text>
       </View>
+
+      {gpsNotice ? (
+        <View style={styles.gpsNotice}>
+          <Text style={styles.gpsNoticeText}>📍 위치 확인이 안 됐어요</Text>
+          <Pressable onPress={() => setReloadKey((k) => k + 1)}>
+            <Text style={styles.gpsRetryText}>다시 시도</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {hidden.canOpen ? (
         <Pressable style={styles.hiddenBanner} onPress={hidden.open}>
@@ -224,6 +249,13 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: colors.border,
   },
   mapEmoji: { fontSize: 20, fontWeight: '700', color: colors.textSecondary },
+  gpsNotice: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 20, paddingVertical: 10, backgroundColor: colors.surface,
+    borderBottomWidth: 1, borderBottomColor: colors.border,
+  },
+  gpsNoticeText: { fontSize: 13, color: colors.textSecondary },
+  gpsRetryText: { fontSize: 13, fontWeight: '700', color: colors.primary },
   hiddenBanner: { backgroundColor: colors.stampGold, paddingVertical: 10, alignItems: 'center' },
   hiddenBannerText: { color: '#fff', fontWeight: '700', fontSize: 14 },
   hiddenBannerHint: { color: '#fff', fontSize: 11, marginTop: 2, opacity: 0.85 },

@@ -2,6 +2,7 @@ node_modules/
 .expo/
 dist/
 .env
+.env.*.bak
 *.log
 ios/
 android/

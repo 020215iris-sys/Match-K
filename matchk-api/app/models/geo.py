@@ -30,5 +30,9 @@ class District(Base):
     sigungu_code: Mapped[int] = mapped_column(Integer, index=True)  # TourAPI sigunguCode
     name_ko: Mapped[str] = mapped_column(String(64))
     name_en: Mapped[str] = mapped_column(String(64))
+    # ⚠️ 2026-09-04 추가: 업적지도 세부보기 리스트가 lang 무관하게 name_en만 내려주던
+    # 문제 수정(지현 QA) — TourAPI 공식 다국어(areaCode2) 값으로 채움.
+    name_ja: Mapped[str] = mapped_column(String(64))
+    name_zh: Mapped[str] = mapped_column(String(64))
     is_declining: Mapped[bool] = mapped_column(Boolean, default=False)  # 발길 끊긴 구
     region: Mapped["Region"] = relationship(back_populates="districts")

@@ -13,23 +13,24 @@ from app.services import tourapi_client
 
 # 부산 16개 구·군 (15구 + 기장군).
 # ✅ 실사 검증 완료 (2026-07-13): areaCode2 실응답과 1~16 전체 일치 (D2 DoD 충족)
+# ja/zh는 TourAPI 공식 다국어(areaCode2) 값 — 2026-09-04 추가 (지현 제공, 업적지도 세부보기 다국어 대응)
 BUSAN_DISTRICTS = [
-    (1, "강서구", "Gangseo-gu", False),
-    (2, "금정구", "Geumjeong-gu", False),
-    (3, "기장군", "Gijang-gun", False),
-    (4, "남구", "Nam-gu", False),
-    (5, "동구", "Dong-gu", True),      # 발길 끊긴 구
-    (6, "동래구", "Dongnae-gu", False),
-    (7, "부산진구", "Busanjin-gu", False),
-    (8, "북구", "Buk-gu", False),
-    (9, "사상구", "Sasang-gu", False),
-    (10, "사하구", "Saha-gu", False),
-    (11, "서구", "Seo-gu", True),      # 발길 끊긴 구
-    (12, "수영구", "Suyeong-gu", False),
-    (13, "연제구", "Yeonje-gu", False),
-    (14, "영도구", "Yeongdo-gu", True),  # 발길 끊긴 구
-    (15, "중구", "Jung-gu", False),
-    (16, "해운대구", "Haeundae-gu", False),
+    (1, "강서구", "Gangseo-gu", "江西区", "江西区", False),
+    (2, "금정구", "Geumjeong-gu", "金井区", "金井区", False),
+    (3, "기장군", "Gijang-gun", "機張郡", "机张郡", False),
+    (4, "남구", "Nam-gu", "南区", "南区", False),
+    (5, "동구", "Dong-gu", "東区", "东区", True),      # 발길 끊긴 구
+    (6, "동래구", "Dongnae-gu", "東莱区", "东莱区", False),
+    (7, "부산진구", "Busanjin-gu", "釜山鎮区", "釜山镇区", False),
+    (8, "북구", "Buk-gu", "北区", "北区", False),
+    (9, "사상구", "Sasang-gu", "沙上区", "沙上区", False),
+    (10, "사하구", "Saha-gu", "沙下区", "沙下区", False),
+    (11, "서구", "Seo-gu", "西区", "西区", True),      # 발길 끊긴 구
+    (12, "수영구", "Suyeong-gu", "水営区", "水营区", False),
+    (13, "연제구", "Yeonje-gu", "蓮堤区", "莲堤区", False),
+    (14, "영도구", "Yeongdo-gu", "影島区", "影岛区", True),  # 발길 끊긴 구
+    (15, "중구", "Jung-gu", "中区", "中区", False),
+    (16, "해운대구", "Haeundae-gu", "海雲台区", "海云台区", False),
 ]
 
 
@@ -46,11 +47,11 @@ def seed_geo(db) -> dict[int, int]:
         db.add(busan)
         db.flush()
     mapping = {}
-    for code, name_ko, name_en, declining in BUSAN_DISTRICTS:
+    for code, name_ko, name_en, name_ja, name_zh, declining in BUSAN_DISTRICTS:
         d = db.query(District).filter_by(region_id=busan.id, sigungu_code=code).first()
         if d is None:
             d = District(region_id=busan.id, sigungu_code=code, name_ko=name_ko,
-                         name_en=name_en, is_declining=declining)
+                         name_en=name_en, name_ja=name_ja, name_zh=name_zh, is_declining=declining)
             db.add(d)
             db.flush()
         mapping[code] = d.id

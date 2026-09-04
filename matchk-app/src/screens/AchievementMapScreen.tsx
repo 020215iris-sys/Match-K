@@ -18,9 +18,31 @@ import Svg, { Polygon, Text as SvgText } from 'react-native-svg';
 
 import { endpoints } from '@/api/endpoints';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
+import { useAppStore } from '@/store/appStore';
 import { colors } from '@/theme/colors';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+// 지도 라벨용 다국어 구 이름 — TourAPI 공식 다국어(areaCode2) 값 (2026-09-04, 지현 제공).
+// ko는 LAYOUT의 nameKo를 그대로 쓰고, 나머지 언어만 여기서 찾음.
+const NAME_BY_CODE: Record<number, { en: string; ja: string; zh: string }> = {
+  1: { en: 'Gangseo-gu', ja: '江西区', zh: '江西区' },
+  2: { en: 'Geumjeong-gu', ja: '金井区', zh: '金井区' },
+  3: { en: 'Gijang-gun', ja: '機張郡', zh: '机张郡' },
+  4: { en: 'Nam-gu', ja: '南区', zh: '南区' },
+  5: { en: 'Dong-gu', ja: '東区', zh: '东区' },
+  6: { en: 'Dongnae-gu', ja: '東莱区', zh: '东莱区' },
+  7: { en: 'Busanjin-gu', ja: '釜山鎮区', zh: '釜山镇区' },
+  8: { en: 'Buk-gu', ja: '北区', zh: '北区' },
+  9: { en: 'Sasang-gu', ja: '沙上区', zh: '沙上区' },
+  10: { en: 'Saha-gu', ja: '沙下区', zh: '沙下区' },
+  11: { en: 'Seo-gu', ja: '西区', zh: '西区' },
+  12: { en: 'Suyeong-gu', ja: '水営区', zh: '水营区' },
+  13: { en: 'Yeonje-gu', ja: '蓮堤区', zh: '莲堤区' },
+  14: { en: 'Yeongdo-gu', ja: '影島区', zh: '影岛区' },
+  15: { en: 'Jung-gu', ja: '中区', zh: '中区' },
+  16: { en: 'Haeundae-gu', ja: '海雲台区', zh: '海云台区' },
+};
 
 interface DistrictLayout {
   code: number;
@@ -73,9 +95,18 @@ interface ProgressByCode {
   [code: number]: { name: string; progress: number; isDeclining: boolean };
 }
 
+// 지도 라벨용 구 이름 — ko는 LAYOUT.nameKo, 그 외 언어는 NAME_BY_CODE에서 찾음
+// (실시간 번역 아니라 고정값이라 비용 없음, 2026-09-04 지현 제안)
+function districtLabel(d: DistrictLayout, lang: string): string {
+  if (lang === 'ko') return d.nameKo;
+  const names = NAME_BY_CODE[d.code];
+  return names?.[lang as 'en' | 'ja' | 'zh'] ?? d.nameKo;
+}
+
 export default function AchievementMapScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation<Nav>();
+  const lang = useAppStore((s) => s.lang);
   const [totals, setTotals] = useState({ stamped: 0, total: 0 });
   const [byCode, setByCode] = useState<ProgressByCode>({});
   // 개발 모드 전용 — 실기기 없이도 색칠 그라데이션을 눈으로 바로 확인하기 위한
@@ -84,7 +115,7 @@ export default function AchievementMapScreen() {
 
   useEffect(() => {
     endpoints
-      .progress()
+      .progress(lang)
       .then((r) => {
         setTotals({ stamped: r.totalStamped, total: r.totalLandmarks });
         const map: ProgressByCode = {};
@@ -94,7 +125,7 @@ export default function AchievementMapScreen() {
         setByCode(map);
       })
       .catch(() => {});
-  }, []);
+  }, [lang]);
 
   return (
     <View style={styles.container}>
@@ -130,7 +161,7 @@ export default function AchievementMapScreen() {
                   onPress={() =>
                     navigation.navigate('DistrictLandmarks', {
                       sigunguCode: d.code,
-                      name: info?.name ?? d.nameKo,
+                      name: info?.name ?? districtLabel(d, lang),
                     })
                   }
                 />
@@ -139,7 +170,7 @@ export default function AchievementMapScreen() {
                   fontSize={16} fontWeight="700" fill={labelColor}
                   textAnchor="middle"
                 >
-                  {d.nameKo}
+                  {districtLabel(d, lang)}
                 </SvgText>
               </React.Fragment>
             );

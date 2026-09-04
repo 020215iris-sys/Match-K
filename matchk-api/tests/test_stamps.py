@@ -21,7 +21,8 @@ def setup_module():
     db.add(busan)
     db.flush()
     yeongdo = db.query(District).filter_by(region_id=busan.id, sigungu_code=14).first() \
-        or District(region_id=busan.id, sigungu_code=14, name_ko="영도구", name_en="Yeongdo-gu", is_declining=True)
+        or District(region_id=busan.id, sigungu_code=14, name_ko="영도구", name_en="Yeongdo-gu",
+                    name_ja="影島区", name_zh="影岛区", is_declining=True)
     db.add(yeongdo)
     db.flush()
     if not db.query(Landmark).filter_by(contentid="test-001").first():

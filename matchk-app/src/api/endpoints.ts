@@ -129,9 +129,9 @@ export const endpoints = {
   hiddenStatus: () =>
     api<{ discovered: number }>('/api/hidden/status'),
 
-  progress: () =>
+  progress: (lang: string) =>
     api<{ districts: DistrictProgress[]; totalLandmarks: number; totalStamped: number }>(
-      '/api/stamps/progress'),
+      `/api/stamps/progress?lang=${lang}`),
 
   // 앱 재시작 시 기존 토큰이 누구 것인지 확인용 (게스트/구글 구분해 화면에 정확히 표시)
   me: () =>

@@ -9,17 +9,21 @@ import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { DistrictProgress, endpoints } from '@/api/endpoints';
 import type { RootStackParamList } from '@/navigation/RootNavigator';
+import { useAppStore } from '@/store/appStore';
 import { colors } from '@/theme/colors';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
 export default function AchievementDistrictsScreen() {
   const navigation = useNavigation<Nav>();
+  const lang = useAppStore((s) => s.lang);
   const [districts, setDistricts] = useState<DistrictProgress[]>([]);
 
+  // 2026-09-04 수정: lang 무관하게 name_en만 오던 문제 — lang을 넘겨서 구 이름이
+  // 선택 언어로 표시되게 함(지현 QA)
   useEffect(() => {
-    endpoints.progress().then((r) => setDistricts(r.districts)).catch(() => setDistricts([]));
-  }, []);
+    endpoints.progress(lang).then((r) => setDistricts(r.districts)).catch(() => setDistricts([]));
+  }, [lang]);
 
   return (
     <FlatList

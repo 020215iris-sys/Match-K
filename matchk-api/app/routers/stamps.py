@@ -16,9 +16,17 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models import District, Landmark, Stamp
 from app.models.user import User
+from app.services.tourapi_client import normalize_lang
 
 router = APIRouter(prefix="/api/stamps", tags=["stamps"])
 settings = get_settings()
+
+# lang → District의 언어별 이름 컬럼 (2026-09-04, 지현 QA — 세부보기 리스트가
+# lang 무관하게 name_en만 내려주던 문제 수정)
+_NAME_COL_BY_LANG = {
+    "ko": District.name_ko, "en": District.name_en,
+    "ja": District.name_ja, "zh": District.name_zh,
+}
 
 
 class StampCreate(BaseModel):
@@ -52,10 +60,12 @@ def my_stamps(db: Session = Depends(get_db), user: User = Depends(get_current_us
 
 
 @router.get("/progress")
-def progress(district: int | None = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+def progress(district: int | None = None, lang: str = "en",
+             db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     """시/구별 진행률 → 업적지도 투명도 색칠 (D6 [A]). 진행률 = 방문/전체."""
+    name_col = _NAME_COL_BY_LANG[normalize_lang(lang)]
     # 일반 도장판은 히든 장소 제외 (히든은 별도 컬렉션 — /hidden/status에서 집계)
-    q = (db.query(District.sigungu_code, District.name_en, District.is_declining,
+    q = (db.query(District.sigungu_code, name_col, District.is_declining,
                   func.count(Landmark.id).label("total"),
                   func.count(Stamp.id).label("stamped"))
          .join(Landmark, (Landmark.district_id == District.id) & (Landmark.is_hidden.is_(False)))

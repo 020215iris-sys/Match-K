@@ -21,7 +21,8 @@ def setup_module():
     db.add(busan); db.flush()
     gu = db.query(District).filter_by(sigungu_code=HIDDEN_TEST_SIGUNGU).first() \
         or District(region_id=busan.id, sigungu_code=HIDDEN_TEST_SIGUNGU,
-                    name_ko="히든테스트구", name_en="Hidden-gu", is_declining=True)
+                    name_ko="히든테스트구", name_en="Hidden-gu",
+                    name_ja="Hidden-gu", name_zh="Hidden-gu", is_declining=True)
     db.add(gu); db.flush()
     if not db.query(Landmark).filter_by(contentid="h-normal-0").first():
         # 일반 도장판 4개 + 히든 2개 (구 하나에 몰아넣고 비율로 트리거 확인)

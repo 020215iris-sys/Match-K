@@ -29,9 +29,9 @@ const LANGS: { code: AppLang; label: string }[] = [
   { code: 'zh', label: '中文' },
 ];
 
-// 스토어 등록 URL과 동일하게 유지 (GitHub 파일 뷰 — public repo라 별도 호스팅 불필요)
-const PRIVACY_POLICY_URL = 'https://github.com/020215iris-sys/Match-K/blob/main/PRIVACY_POLICY.md';
-const TERMS_OF_SERVICE_URL = 'https://github.com/020215iris-sys/Match-K/blob/main/TERMS_OF_SERVICE.md';
+// 스토어 등록 URL과 동일하게 유지 (GitHub Pages — docs/ 폴더를 웹페이지로 게시)
+const PRIVACY_POLICY_URL = 'https://020215iris-sys.github.io/Match-K/privacy.html';
+const TERMS_OF_SERVICE_URL = 'https://020215iris-sys.github.io/Match-K/terms.html';
 
 // TurboModuleRegistry.get()은 getEnforcing()과 달리 없어도 안 던지고 null 반환 —
 // 이걸로 먼저 확인해야 google-signin 패키지를 아예 안 불러올 수 있음(Expo Go 대응).

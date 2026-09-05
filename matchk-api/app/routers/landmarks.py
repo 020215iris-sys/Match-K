@@ -9,7 +9,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user_optional
 from app.models import District, Landmark, Stamp
 from app.models.user import User
-from app.services import lang_mapping, tourapi_client, translator
+from app.services import lang_mapping, recommender, tourapi_client, translator
 
 router = APIRouter(prefix="/api/landmarks", tags=["landmarks"])
 
@@ -91,14 +91,21 @@ async def list_landmarks(district: int | None = Query(None, description="TourAPI
     직접 검색하면 결과가 텅 비는 경우가 많고(예: 일본어 수영구 0건), ⓑ 도장 시스템이 국문
     contentid 기준이라 외국어 서비스의 contentid로는 도장 자체가 안 찍힘. 표시 언어는
     _localize_items()가 공식 등록판/Papago로 맞춰줌 (search.py의 카테고리 검색과 같은 패턴)."""
+    # is_active=False 장소는 TourAPI 원본 데이터 오류 등으로 제외된 것 — 목록에서도 뺀다
+    # (recommender._hidden_contentids()와 같은 패턴, 2026-09-05).
+    inactive = recommender._inactive_contentids(db)
     items = await tourapi_client.list_by_area("ko", sigungu_code=district, content_type_id=type)
+    items = [i for i in items if i.get("contentid") not in inactive]
     items = await _localize_items(items, lang)
     return {"items": items, "count": len(items)}
 
 
 @router.get("/nearby")
-async def nearby_landmarks(lat: float, lng: float, radius: int = 3000, lang: str = "en"):
+async def nearby_landmarks(lat: float, lng: float, radius: int = 3000, lang: str = "en",
+                           db: Session = Depends(get_db)):
+    inactive = recommender._inactive_contentids(db)
     items = await tourapi_client.location_based(lang, lat, lng, radius_m=radius)
+    items = [i for i in items if i.get("contentid") not in inactive]
     return {"items": items, "count": len(items)}
 
 

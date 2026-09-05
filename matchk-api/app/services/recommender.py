@@ -203,6 +203,19 @@ def _hidden_contentids(db: Session) -> set[str]:
             .filter(Landmark.is_hidden.is_(True)).all()}
 
 
+def _inactive_contentids(db: Session) -> set[str]:
+    """is_active=False로 제외된 장소의 contentid (추천·검색·목록에서 제외할 대상).
+
+    ▸ 신규 (2026-09-05). 후보 수집(collect_candidates)이 TourAPI를 직접 호출해서
+      DB의 is_active를 원래 안 보는데, 그러면 TourAPI 원본 좌표가 잘못된 장소도
+      그대로 추천·검색에 노출된다 (예: 반송공원 contentid 2907087, seed_landmarks.py의
+      _KNOWN_BAD_CONTENTIDS 참고). _hidden_contentids()와 동일한 패턴 — 캐싱 없이
+      매 요청 조회 (건수가 적어 부담 미미, 일관성 우선).
+    """
+    return {row[0] for row in db.query(Landmark.contentid)
+            .filter(Landmark.is_active.is_(False)).all()}
+
+
 # ══════════════════════════════════════════════════════════════════════
 # [1/3] 후보 수집 — Step 1
 #   "어떤 장소들을 후보로 볼 것인가"만 담당. 점수는 매기지 않는다.
@@ -336,12 +349,13 @@ async def score_and_rank(
 
     stamped = _stamped_contentids(db, user_id)
     hidden = _hidden_contentids(db)   # ▸ 추가: 히든은 조우로만 발견 (아래 제외 조건에서 사용)
+    inactive = _inactive_contentids(db)  # ▸ 추가 (2026-09-05): TourAPI 원본 데이터 오류 등으로 제외된 장소
 
     scored: list[Candidate] = []
     for c in candidates:
-        # ▸ 변경점: 기존 stamped 제외에 hidden 제외를 추가
-        if c.contentid in stamped or c.contentid in hidden:
-            continue  # 이미 찍은 곳 + 히든 장소 제외
+        # ▸ 변경점: 기존 stamped 제외에 hidden·inactive 제외를 추가
+        if c.contentid in stamped or c.contentid in hidden or c.contentid in inactive:
+            continue  # 이미 찍은 곳 + 히든 장소 + is_active=False 장소 제외
         idx = visit_idx.get(c.sigungu_code or -1, {"foreign": 0.5, "domestic": 0.5})
         c.score += W_FOREIGN * idx["foreign"]
         c.score += W_DOMESTIC * (1.0 - idx["domestic"])

@@ -68,7 +68,8 @@ def progress(district: int | None = None, lang: str = "en",
     q = (db.query(District.sigungu_code, name_col, District.is_declining,
                   func.count(Landmark.id).label("total"),
                   func.count(Stamp.id).label("stamped"))
-         .join(Landmark, (Landmark.district_id == District.id) & (Landmark.is_hidden.is_(False)))
+         .join(Landmark, (Landmark.district_id == District.id) & (Landmark.is_hidden.is_(False))
+               & Landmark.is_active)
          .outerjoin(Stamp, (Stamp.landmark_id == Landmark.id) & (Stamp.user_id == user.id))
          .group_by(District.id))
     if district is not None:

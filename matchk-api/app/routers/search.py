@@ -32,14 +32,20 @@ def _rank_results(items: list[dict], keyword: str) -> list[dict]:
 
 
 @router.get("")
-async def search(q: str, lang: str = "en", lat: float | None = None, lng: float | None = None):
+async def search(q: str, lang: str = "en", lat: float | None = None, lng: float | None = None,
+                 db: Session = Depends(get_db)):
+    # is_active=False 장소는 TourAPI 원본 데이터 오류 등으로 제외된 것 — 검색 결과에서도 뺀다
+    # (recommender._hidden_contentids()와 같은 패턴, 2026-09-05).
+    inactive = recommender._inactive_contentids(db)
     items = await tourapi_client.search_by_keyword(lang, q)
+    items = [i for i in items if i.get("contentid") not in inactive]
     items = _rank_results(items, q)
     fallback = []
     category_hints: list[str] = []
     if not items:
         flat, flng = (lat, lng) if lat is not None and lng is not None else BUSAN_CENTER
         fallback = await tourapi_client.location_based(lang, flat, flng)
+        fallback = [i for i in fallback if i.get("contentid") not in inactive]
         # 문장 검색 0건 → 카테고리 칩 제안 (2026-08-23, "카테고리 칩 + 역추천" 제안).
         # 0건일 때만 계산 — 이름 검색이 성공하는 대부분의 요청은 이 비용이 아예 안 듦.
         category_hints = category_dictionary.extract_categories(q, lang)

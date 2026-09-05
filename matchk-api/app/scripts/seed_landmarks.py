@@ -59,6 +59,21 @@ def seed_geo(db) -> dict[int, int]:
     return mapping
 
 
+# 알려진 TourAPI 원본 데이터 오류 — 재시드(일 1회) 때마다 아래 sync_landmarks()가
+# 기존 행의 is_active를 무조건 True로 되돌리므로, DB에서 is_active=False로 꺼두는 것만으론
+# 다음 시드 실행 시 조용히 되살아난다. 여기서 아예 upsert 대상에서 제외해 재발을 막는다.
+#
+#   - contentid 2907087 (반송공원, 부산 해운대구): TourAPI가 mapx=117.9925662504,
+#     mapy=19.6944274800(대만 근해)로 반환. addr1은 "부산광역시 해운대구 반송순환로
+#     100-53"으로 정상이라 주소는 맞는데 좌표만 잘못됨.
+#   - 2026-09-05 재조회에서도 동일하게 잘못된 값 확인 — 우리 파싱/저장 버그가 아니라
+#     TourAPI 원본 자체의 오류.
+#   - 좌표 기반 거리 계산(홈 역추천·근처 검색)이 무너지므로 제외.
+#   - 좌표를 임의로 보정하지 않은 이유: 공공데이터 원본을 우리가 지어내면 데이터 출처의
+#     신뢰성이 깨진다. TourAPI가 자체적으로 정정하면 이 목록에서 빼면 됨.
+_KNOWN_BAD_CONTENTIDS = {"2907087"}
+
+
 async def sync_landmarks(db, district_ids: dict[int, int]) -> int:
     """국문 관광정보 API 페이징 → 참조 upsert. 최소 500건 목표 (D2 DoD)."""
     count = 0
@@ -69,6 +84,8 @@ async def sync_landmarks(db, district_ids: dict[int, int]) -> int:
             break
         for item in items:
             cid = str(item.get("contentid", ""))
+            if cid in _KNOWN_BAD_CONTENTIDS:
+                continue  # 위 주석 참고 — is_active 재활성화 방지
             try:
                 sigungu = int(item.get("sigungucode", 0))
                 mapx, mapy = float(item["mapx"]), float(item["mapy"])

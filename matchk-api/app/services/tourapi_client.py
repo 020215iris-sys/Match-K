@@ -100,6 +100,11 @@ async def _get(service: str, operation: str, params: dict[str, Any], use_long_ca
     result = items.get("item", []) if isinstance(items, dict) else []
     if isinstance(result, dict):
         result = [result]
+    for item in result:
+        for field in ("firstimage", "firstimage2"):
+            v = item.get(field)
+            if isinstance(v, str) and v.startswith("http://"):
+                item[field] = "https://" + v[len("http://"):]
     cache_set(cache, key, result)
     return result
 

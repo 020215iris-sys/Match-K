@@ -61,6 +61,15 @@ npx expo start
 
 - **실기기 테스트 시** `.env`의 `EXPO_PUBLIC_API_URL`을 `http://<내 PC LAN IP>:8000`으로 (localhost는 기기에서 안 잡힘)
 - Google 로그인/SecureStore는 Expo Go 제약 → `npx expo run:android` 또는 EAS dev build
+- ⚠️ **`EXPO_PUBLIC_*` 값은 `.env`가 아니라 EAS 환경변수로 관리한다** (`eas env:set`).
+  `.env`는 로컬 개발용이고 `.gitignore`에 걸려 있어서 **EAS 클라우드 빌드에는 업로드되지 않는다**
+  (`.easignore`가 따로 없으면 EAS도 `.gitignore` 규칙을 그대로 따름). `eas build`로 만든 dev/preview/
+  production 빌드는 로컬 `.env`를 전혀 못 보고, 코드에 폴백값이 있으면 그게 박히고(예:
+  `EXPO_PUBLIC_API_URL` 미설정 시 `http://localhost:8000`) 없으면 `undefined`가 박힌다 —
+  로컬(`npx expo start`)에서는 멀쩡히 되는데 EAS 빌드에서만 API 연결이 깨지는 형태라 뒤늦게
+  발견되기 쉽다 (2026-09-06 실제로 겪음). 새 `EXPO_PUBLIC_*` 값이 생기면 `.env`뿐 아니라
+  `eas env:set --name <이름> --value <값> --environment production preview development`로도
+  등록해야 EAS 빌드에 반영된다.
 
 ## 4-1. ⚠️ 자주 걸리는 환경 함정 (실제 겪은 것들 — 먼저 읽기)
 
